@@ -22,7 +22,7 @@ func readFile(fn string) {
 }
 
 func main() {
-	fmt.Println("Day 1")
+	fmt.Println("Day 1: Chronal Calibration")
 
 	file, _ := os.Open("input01.txt")
 	defer file.Close()

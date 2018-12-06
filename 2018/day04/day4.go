@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	fmt.Println("--- Day 4: Repose Record ---")
+	fmt.Println("Day 4: Repose Record")
 
 	// part1()
 	part2()
