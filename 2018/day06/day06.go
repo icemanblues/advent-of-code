@@ -69,16 +69,14 @@ func isInfinite(grid [][]int) map[int]bool {
 func main() {
 	fmt.Println("Day 06: Chronal Coordinates")
 
-	// part1()
+	part1()
 	part2()
 }
 
-// 6973 is too high
 func part1() {
 	fmt.Println("Part 1")
 
 	points := readInput("input06.txt")
-	// fmt.Println(points)
 
 	xmax, ymax := -1, -1
 	for _, p := range points {
