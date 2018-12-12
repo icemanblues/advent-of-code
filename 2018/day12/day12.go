@@ -143,22 +143,24 @@ func printState(gen int, state map[int]rune) {
 	fmt.Printf("%2d: %v\n", gen, stringState(state))
 }
 
+func sumState(state map[int]rune) int {
+	sum := 0
+	for k, _ := range state {
+		sum += k
+	}
+	return sum
+}
+
 func part2() {
 	fmt.Println("Part 2")
 
 	state, transitions := readInput("input12.txt")
-
 	// numGen := 20
 	numGen := 50000000000
 
-	genMap := make(map[string]int)
+	genMap := make(map[int]int)
 
 	for gen := 0; gen < numGen; gen++ {
-		// printState(gen, state)
-		if gen%1000 == 0 {
-			fmt.Printf("generation iteration: %v %v\n", gen, len(state))
-		}
-
 		// get the min & max idx so we know where to start and end
 		minIdx := len(state)
 		maxIdx := 0
@@ -169,6 +171,12 @@ func part2() {
 			if maxIdx < idx {
 				maxIdx = idx
 			}
+		}
+
+		// printState(gen, state)
+		if gen%1000 == 0 {
+			fmt.Printf("generation iteration: %v %v %v\n", gen, len(state), sumState(state))
+			fmt.Printf("generation iteration: min %v max %v diff %v\n", minIdx, maxIdx, maxIdx-minIdx)
 		}
 
 		nextState := make(map[int]rune)
@@ -192,15 +200,18 @@ func part2() {
 		}
 
 		state = nextState
-		s := stringState(state)
+
+		s := sumState(state)
 		if v, ok := genMap[s]; ok {
 			fmt.Printf("loop detected. curr gen %v, old gen %v\n", gen, v)
-			break
+			fmt.Printf("sum of this state: %v\n", s)
+			// break
 		}
 		genMap[s] = gen
 	}
 
 	// printState(numGen, state)
+	// printState(0, initial)
 	fmt.Printf("number of plants: %v\n", len(state))
 
 	sum := 0
