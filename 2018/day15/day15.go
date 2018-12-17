@@ -33,14 +33,14 @@ func readInput(filename string) ([][]rune, Units, Units) {
 			if r == 'G' {
 				g := NewGoblin(uniqueID, i, lineNum)
 				goblins = append(goblins, g)
-				l = append(l, intToRune(uniqueID))
+				l = append(l, r)
 				uniqueID++
 				continue
 			}
 			if r == 'E' {
 				e := NewElf(uniqueID, i, lineNum)
 				elves = append(elves, e)
-				l = append(l, intToRune(uniqueID))
+				l = append(l, r)
 				uniqueID++
 				continue
 			}
@@ -137,7 +137,8 @@ func main() {
 	fmt.Println("Day 15: Beverage Bandits")
 
 	// tests := []string{"test1.txt", "test2.txt", "test3.txt", "test4.txt", "test5.txt", "test6.txt"}
-	tests := []string{"test1.txt"}
+	// tests := []string{"test2.txt"}
+	tests := []string{"input15.txt"}
 	for _, t := range tests {
 		part1(t)
 	}
@@ -335,7 +336,7 @@ func move(u *Unit, enemies Units, cave [][]rune) {
 
 		cave[u.loc.Y][u.loc.X] = '.'
 		u.loc = next
-		cave[u.loc.Y][u.loc.X] = intToRune(u.ID)
+		cave[u.loc.Y][u.loc.X] = u.Race //intToRune(u.ID)
 	}
 }
 
@@ -384,17 +385,26 @@ func part1(fn string) {
 	cave, elves, goblins := readInput(fn)
 
 	round := 0
-	// for len(elves) != 0 && len(goblins) != 0 {
-	for round < 40 {
-		// display cave status
-		fmt.Printf("Round %d\n", round)
-		printState(cave, elves, goblins, true)
+	for len(elves) != 0 && len(goblins) != 0 {
+
+		if round%1000 == 0 {
+			// display cave status
+			fmt.Printf("Round %d : Start\n", round)
+			printState(cave, elves, goblins, true)
+		}
 
 		if len(elves) == 0 || len(goblins) == 0 {
 			break
 		}
+
 		// order all units in reading order, so we can take turn
-		units := append(elves, goblins...)
+		var units Units
+		for _, e := range elves {
+			units = append(units, e)
+		}
+		for _, g := range goblins {
+			units = append(units, g)
+		}
 		sort.Sort(units)
 
 		for _, u := range units {
