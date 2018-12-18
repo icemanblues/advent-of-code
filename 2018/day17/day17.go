@@ -97,7 +97,6 @@ func main() {
 
 	part1("test1.txt")
 	part1("input17.txt")
-	// part2()
 }
 
 var Spring Point = Point{X: 500, Y: 0}
@@ -126,17 +125,33 @@ func pour(clay, water map[Point]rune, xmin, xmax, ymin, ymax int) {
 	// the queue contains springs. When a container becomes full, it will pour off the side
 	// and pouring off the side is effectively a new spring for the queue
 	queue := []Point{Point{Spring.X, ymin}}
+	visited := make(map[Point]struct{})
+	// tick := 0
 
 	for len(queue) != 0 {
 		curr := queue[0]
 		queue = queue[1:]
 
-		// continue to pour straight down until clay is reached
+		if _, ok := visited[curr]; ok {
+			// fmt.Println("[WARN WARN WARN] already processed this spout, so skip it", curr)
+			continue
+		}
+		visited[curr] = struct{}{}
+
 		x, y := curr.X, curr.Y
+
+		// continue to pour straight down until clay is reached
 		for y <= ymax {
 			p := Point{x, y}
-			if _, ok := clay[p]; ok {
-				// clay detected so start filling up
+
+			// fill down until clay or resting water
+			// if r, restBot := water[p]; restBot && r == '~' {
+			// 	y++
+			// 	break
+			// }
+
+			// fill down until clay
+			if _, clayBot := clay[p]; clayBot {
 				break
 			} else {
 				water[p] = '|'
@@ -145,31 +160,87 @@ func pour(clay, water map[Point]rune, xmin, xmax, ymin, ymax int) {
 			y++
 		}
 
+		// tick++
+		// fmt.Println(tick, "+++ we're on spout number +++", tick, curr)
+		// fmt.Printf("Currently at depth %d out of %d. Only %d left to go\n", y, ymax, ymax-y)
+		// fmt.Println("number of water tiles", len(water))
+		// fmt.Println("number of spouts remaining", len(queue))
+
 		// we're off the grid, so stop
 		if y > ymax {
 			continue
 		}
 
-		// not off the grid, so we must start to fill up
-		l, r := true, true
-		for i := 0; l || r; i++ {
-			if l {
-				p2 := Point{x - i, y}
-				if _, ok := clay[p2]; ok {
-					l = false
-				} else {
-					water[p2] = '~'
-				}
-			}
-			if r {
-				p1 := Point{x + i, y}
-				if _, ok := clay[p1]; ok {
-					r = false
-				} else {
-					water[p1] = '~'
-				}
+		// not off the grid, so we must start to fill up (left to right)
+		fill := true
+		for fill {
+			y--
+
+			// should never make it here
+			if y < ymin {
+				fmt.Println("!!! [ERROR] when filling up, we are passed ymin. How did we do this?")
+				break
 			}
 
+			l, r := true, true
+			maxr, maxl := x, x
+			for i := 0; l || r; i++ {
+				if l {
+					pl := Point{x - i, y}
+					bot := Point{x - i, y + 1}
+					_, clayLeft := clay[pl]
+					_, clayBot := clay[bot]
+					r, restBot := water[bot]
+					clayBot = clayBot || (restBot && r == '~')
+
+					if clayLeft && clayBot {
+						l = false
+						maxl = pl.X
+					} else if clayBot {
+						water[pl] = '~'
+					} else if !clayBot {
+						// this point becomes a spout
+						water[pl] = '|'
+						l = false
+						maxl = pl.X
+						fill = false
+						queue = append(queue, pl)
+					}
+				}
+				if r {
+					pr := Point{x + i, y}
+					bot := Point{x + i, y + 1}
+					_, clayRight := clay[pr]
+					_, clayBot := clay[bot]
+					ru, restBot := water[bot]
+					clayBot = clayBot || (restBot && ru == '~')
+
+					if clayRight && clayBot {
+						r = false
+						maxr = pr.X
+					} else if clayBot {
+						water[pr] = '~'
+					} else if !clayBot {
+						// this point becomes a spout
+						water[pr] = '|'
+						fill = false
+						maxr = pr.X
+						r = false
+						queue = append(queue, pr)
+					}
+				}
+
+				// fmt.Printf("fill %v left %v right %v at depth %v\n", fill, l, r, y)
+				// printState(clay, water, xmin, xmax, ymin, ymax)
+			}
+
+			if !fill {
+				// this means that we created a spout
+				for i := maxl + 1; i <= maxr; i++ {
+					p := Point{i, y}
+					water[p] = '|'
+				}
+			}
 		}
 	}
 }
@@ -187,10 +258,18 @@ func part1(fn string) {
 	// another map to store the water points
 	water := make(map[Point]rune)
 
-	printState(clay, water, xmin, xmax, ymin, ymax)
+	fmt.Println(xmin, xmax, ymin, ymax)
+	pour(clay, water, xmin, xmax, ymin, ymax)
 
-}
+	fmt.Printf("%d water tiles\n", len(water))
 
-func part2() {
-	fmt.Println("Part 2")
+	sum := 0
+	for _, r := range water {
+		if r == '~' {
+			sum++
+		}
+	}
+	fmt.Printf("resting water count %d\n", sum)
+
+	// printState(clay, water, xmin, xmax, ymin, ymax)
 }
