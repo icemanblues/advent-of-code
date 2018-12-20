@@ -137,10 +137,15 @@ func main() {
 	fmt.Println("Day 15: Beverage Bandits")
 
 	// tests := []string{"test1.txt", "test2.txt", "test3.txt", "test4.txt", "test5.txt", "test6.txt"}
-	// tests := []string{"test2.txt"}
+	// tests := []string{"simple.txt", "simple1.txt"}
 	tests := []string{"input15.txt"}
+	rounds := []int{}
+
+	// tests := []string{"test1.txt"}
+	// rounds := []int{0, 1, 2, 23, 24, 25, 26, 27, 28, 45, 46, 47}
+
 	for _, t := range tests {
-		part1(t)
+		part1(t, rounds)
 	}
 
 	// part2()
@@ -282,6 +287,8 @@ func isReachable(u Unit, target Point, grid [][]rune) (bool, []PointDist) {
 		next := adj(p.point, grid)
 		for _, n := range next {
 			if _, ok := visited[n]; !ok {
+				visited[n] = struct{}{}
+
 				pd := &PointDist{n, p.dist + 1, empty, nil}
 				// increment the path
 				pd.path = append(p.path, p.point)
@@ -325,25 +332,25 @@ func move(u *Unit, enemies Units, cave [][]rune) {
 		}
 	}
 
-	// find the point with the shortest distance, using reading order as tie breaker
-	sort.Sort(adjDist)
-
+	// there are places available for us to move to
 	if len(adjDist) != 0 {
+		// find the point with the shortest distance, using reading order as tie breaker
+		sort.Sort(adjDist)
 
 		// okay we can move one step in that direction
 		direction := adjDist[0]
 		next := direction.step
 
+		// update the Unit and the Cave to show that they have moved
 		cave[u.loc.Y][u.loc.X] = '.'
 		u.loc = next
-		cave[u.loc.Y][u.loc.X] = u.Race //intToRune(u.ID)
+		cave[u.loc.Y][u.loc.X] = u.Race
 	}
 }
 
 // will update HP values if they are attacking
+// true if an enemy unit just died, and their id
 func attack(u *Unit, enemies Units, cave [][]rune) (bool, int) {
-	// it should return an updated array of elves and goblins, in case one has died
-	// or maybe we mark it as dead, and deal with it later (skip it)
 
 	atkEnemies := adjEnemies(u, enemies, cave)
 	if len(atkEnemies) == 0 {
@@ -351,10 +358,10 @@ func attack(u *Unit, enemies Units, cave [][]rune) (bool, int) {
 	}
 
 	sort.Slice(atkEnemies, func(i, j int) bool {
-		if atkEnemies[i].Hp < atkEnemies[i].Hp {
+		if atkEnemies[i].Hp < atkEnemies[j].Hp {
 			return true
 		}
-		if atkEnemies[i].Hp > atkEnemies[i].Hp {
+		if atkEnemies[i].Hp > atkEnemies[j].Hp {
 			return false
 		}
 
@@ -379,7 +386,7 @@ func isDead(u *Unit) bool {
 	return u.Hp <= 0
 }
 
-func part1(fn string) {
+func part1(fn string, rounds []int) {
 	fmt.Println("Part 1")
 
 	cave, elves, goblins := readInput(fn)
@@ -387,15 +394,16 @@ func part1(fn string) {
 	round := 0
 	for len(elves) != 0 && len(goblins) != 0 {
 
-		if round%1000 == 0 {
-			// display cave status
-			fmt.Printf("Round %d : Start\n", round)
-			printState(cave, elves, goblins, true)
+		for _, r := range rounds {
+			if r == round {
+				// display cave status
+				fmt.Printf("Round %d : Start\n", round)
+				printState(cave, elves, goblins, true)
+			}
 		}
 
-		if len(elves) == 0 || len(goblins) == 0 {
-			break
-		}
+		fmt.Printf("Round %d : Start\n", round)
+		turn := 0
 
 		// order all units in reading order, so we can take turn
 		var units Units
@@ -408,6 +416,13 @@ func part1(fn string) {
 		sort.Sort(units)
 
 		for _, u := range units {
+			fmt.Printf("Round %2d and Turn %2d\n", round, turn)
+			turn++
+
+			if len(elves) == 0 || len(goblins) == 0 {
+				break
+			}
+
 			if isDead(u) {
 				continue
 			}
@@ -430,7 +445,7 @@ func part1(fn string) {
 
 			// ATTACK ATTACK ATTACK
 			kill, id := attack(u, enemies, cave)
-			// attack(u, enemies, cave)
+
 			//if there is a kill, remove it from the slice
 			if kill {
 				gidx, eidx := -1, -1
@@ -457,6 +472,7 @@ func part1(fn string) {
 		if len(elves) == 0 || len(goblins) == 0 {
 			break
 		}
+
 		round++
 	}
 
@@ -470,6 +486,7 @@ func part1(fn string) {
 
 	outcome := round * sumHP
 	fmt.Printf("[%v]: rounds %d total HP %d outcome %d\n", fn, round, sumHP, outcome)
+	printState(cave, elves, goblins, true)
 }
 
 func part2() {
