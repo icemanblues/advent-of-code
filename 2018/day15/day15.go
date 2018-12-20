@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func readInput(filename string) ([][]rune, Units, Units) {
+func readInput(filename string, elfAP int) ([][]rune, Units, Units) {
 	file, err := os.Open(filename)
 	if err != nil {
 		fmt.Printf("something bad with file: %v\n", err)
@@ -38,7 +38,7 @@ func readInput(filename string) ([][]rune, Units, Units) {
 				continue
 			}
 			if r == 'E' {
-				e := NewElf(uniqueID, i, lineNum)
+				e := NewElf(uniqueID, i, lineNum, elfAP)
 				elves = append(elves, e)
 				l = append(l, r)
 				uniqueID++
@@ -79,10 +79,11 @@ func NewBaseUnit() *Unit {
 	}
 }
 
-func NewElf(id, x, y int) *Unit {
+func NewElf(id, x, y, ap int) *Unit {
 	elf := NewBaseUnit()
 	elf.Race = 'E'
 
+	elf.Ap = ap
 	elf.ID = id
 	elf.loc = Point{x, y}
 	return elf
@@ -138,17 +139,18 @@ func main() {
 
 	// tests := []string{"test1.txt", "test2.txt", "test3.txt", "test4.txt", "test5.txt", "test6.txt"}
 	// tests := []string{"simple.txt", "simple1.txt"}
-	tests := []string{"input15.txt"}
-	rounds := []int{}
-
 	// tests := []string{"test1.txt"}
+	tests := []string{"input15.txt"}
+	// rounds := []int{}
 	// rounds := []int{0, 1, 2, 23, 24, 25, 26, 27, 28, 45, 46, 47}
+	// for _, t := range tests {
+	// 	part1(t, rounds)
+	// }
 
 	for _, t := range tests {
-		part1(t, rounds)
+		ap, out := part2(t)
+		fmt.Printf("Elves win with AP %d and outcome %d\n", ap, out)
 	}
-
-	// part2()
 }
 
 func printState(cave [][]rune, elves []*Unit, goblins []*Unit, verbose bool) {
@@ -386,24 +388,21 @@ func isDead(u *Unit) bool {
 	return u.Hp <= 0
 }
 
-func part1(fn string, rounds []int) {
-	fmt.Println("Part 1")
-
-	cave, elves, goblins := readInput(fn)
-
+func battle(cave [][]rune, elves Units, goblins Units) int {
+	numElves := len(elves)
 	round := 0
 	for len(elves) != 0 && len(goblins) != 0 {
 
-		for _, r := range rounds {
-			if r == round {
-				// display cave status
-				fmt.Printf("Round %d : Start\n", round)
-				printState(cave, elves, goblins, true)
-			}
-		}
+		// for _, r := range rounds {
+		// 	if r == round {
+		// 		// display cave status
+		// 		fmt.Printf("Round %d : Start\n", round)
+		// 		printState(cave, elves, goblins, true)
+		// 	}
+		// }
 
-		fmt.Printf("Round %d : Start\n", round)
-		turn := 0
+		// fmt.Printf("Round %d : Start\n", round)
+		// turn := 0
 
 		// order all units in reading order, so we can take turn
 		var units Units
@@ -416,8 +415,8 @@ func part1(fn string, rounds []int) {
 		sort.Sort(units)
 
 		for _, u := range units {
-			fmt.Printf("Round %2d and Turn %2d\n", round, turn)
-			turn++
+			// fmt.Printf("Round %2d and Turn %2d\n", round, turn)
+			// turn++
 
 			if len(elves) == 0 || len(goblins) == 0 {
 				break
@@ -484,11 +483,44 @@ func part1(fn string, rounds []int) {
 		sumHP += e.Hp
 	}
 
+	// an elf died, so we must return
+	if len(elves) != numElves {
+		return 0
+	}
+
 	outcome := round * sumHP
-	fmt.Printf("[%v]: rounds %d total HP %d outcome %d\n", fn, round, sumHP, outcome)
-	printState(cave, elves, goblins, true)
+	return outcome
 }
 
-func part2() {
+func part1(fn string) {
+	fmt.Println("Part 1")
+
+	cave, elves, goblins := readInput(fn, 3)
+
+	outcome := battle(cave, elves, goblins)
+	fmt.Printf("battle %s outcome %d\n", fn, outcome)
+	// fmt.Printf("[%v]: rounds %d total HP %d outcome %d\n", fn, round, sumHP, outcome)
+	// printState(cave, elves, goblins, true)
+
+}
+
+func part2(fn string) (int, int) {
 	fmt.Println("Part 2")
+
+	elfAP := 4
+	outcome := 0
+	for {
+		fmt.Printf("Starting with elfAP: %d\n", elfAP)
+
+		cave, elves, goblins := readInput(fn, elfAP)
+		outcome = battle(cave, elves, goblins)
+		if outcome != 0 {
+			fmt.Printf("Battle %s Victory achieved outcome %d with elven attack power: %d\n", fn, outcome, elfAP)
+			break
+		}
+
+		elfAP++
+	}
+
+	return elfAP, outcome
 }
