@@ -204,14 +204,6 @@ func part2() {
 		}
 	}
 
-	// for i := 1; i <= limit/2; i++ {
-	// 	for j := 1; j <= limit; j++ {
-	// 		if i*j == limit {
-	// 			sum += j
-	// 		}
-	// 	}
-	// }
-
 	fmt.Println(sum)
 
 }
