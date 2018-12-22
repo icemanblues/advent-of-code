@@ -23,7 +23,7 @@ func readInput(filename string) []string {
 }
 
 func main() {
-	fmt.Println("Day XX: Title")
+	fmt.Println("Day 22: Mode Maze")
 
 	part1()
 	part2()
