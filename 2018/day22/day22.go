@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 )
 
@@ -38,6 +39,7 @@ func main() {
 	part1(input)
 
 	// 983 too high
+	// 977 too high
 	// part2()
 }
 
@@ -128,6 +130,11 @@ func adj(p Point) []Point {
 	return points
 }
 
+type ToolTime struct {
+	tool int
+	time int
+}
+
 func part1(input Input) {
 	fmt.Println("Part 1")
 
@@ -170,11 +177,16 @@ func part1(input Input) {
 		neither:  rocky,  // 1 2
 	}
 
-	// BFS from start to target, and back
-	timer := -1
+	// BFS from start to target
+	timer := math.MaxInt32
 	start := Node{Mouth, 0, torch, 0, 0}
 	queue := []Node{start}
-	visited := make(map[Point]int)
+	visitedMap := map[int]map[Point]int{
+		torch:    make(map[Point]int),
+		climbing: make(map[Point]int),
+		neither:  make(map[Point]int),
+	}
+
 	for len(queue) != 0 {
 		n := queue[0]
 		queue = queue[1:]
@@ -188,9 +200,6 @@ func part1(input Input) {
 				goal += delay
 			}
 
-			if timer == -1 {
-				timer = goal
-			}
 			if goal < timer {
 				timer = goal
 			}
@@ -200,11 +209,13 @@ func part1(input Input) {
 		}
 
 		// if you have taken longer than our best time, you need to stop
-		if timer != -1 && n.time > timer {
+		if n.time > timer {
 			continue
 		}
 
+		// But have you been here with this weapon before?
 		// have I been here before with better time
+		visited := visitedMap[n.tool]
 		if t, ok := visited[n.p]; ok && t <= n.time {
 			continue
 		}
