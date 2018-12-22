@@ -135,6 +135,23 @@ type ToolTime struct {
 	time int
 }
 
+// region types
+const Rocky = 0  // torch, climbing
+const Wet = 1    // climbing, neither
+const Narrow = 2 // torch, neither
+// tools
+const Torch = 0
+const Climbing = 1
+const Neither = 2
+
+const Delay = 7
+
+var ToolBadRegion = map[int]int{
+	Torch:    Wet,    // 0, 2
+	Climbing: Narrow, // 0 1
+	Neither:  Rocky,  // 1 2
+}
+
 func part1(input Input) {
 	fmt.Println("Part 1")
 
@@ -160,44 +177,28 @@ func part1(input Input) {
 	sum := computeRisk(input.target, regionCache)
 	fmt.Printf("Sum to %v is %d\n", input.target, sum)
 
-	// region types
-	rocky := 0  // torch, climbing
-	wet := 1    // climbing, neither
-	narrow := 2 // torch, neither
-	// tools
-	torch := 1
-	climbing := 1
-	neither := 2
-
-	delay := 7
-
-	toolBadRegion := map[int]int{
-		torch:    wet,    // 0, 2
-		climbing: narrow, // 0 1
-		neither:  rocky,  // 1 2
-	}
-
 	// BFS from start to target
 	timer := math.MaxInt32
-	start := Node{Mouth, 0, torch, 0, 0}
+	start := Node{Mouth, 0, Torch, 0, 0}
 	queue := []Node{start}
 	visitedMap := map[int]map[Point]int{
-		torch:    make(map[Point]int),
-		climbing: make(map[Point]int),
-		neither:  make(map[Point]int),
+		Torch:    make(map[Point]int),
+		Climbing: make(map[Point]int),
+		Neither:  make(map[Point]int),
 	}
 
 	for len(queue) != 0 {
-		n := queue[0]
-		queue = queue[1:]
+		n, q := next(queue)
+		queue = q
 
 		// found the target
 		// must equip the torch when target is reached
 		if n.p == input.target {
 			goal := n.time
-			if n.tool != torch {
+			if n.tool != Torch {
 				// swap to torch
-				goal += delay
+				goal = goal + Delay
+				// fmt.Printf("next line needs to increase its swap by 1: %d\n", n.swaps+1)
 			}
 
 			if goal < timer {
@@ -223,18 +224,9 @@ func part1(input Input) {
 
 		computeAll(n.p, input.target, input.depth, geoCache, erosionCache, regionCache)
 		curr := regionCache[n.p]
-		t := n.tool
 
 		// figure out the other tool to use for this region
-		for tool, badReg := range toolBadRegion {
-			if tool == n.tool {
-				continue
-			}
-			if curr == badReg {
-				continue
-			}
-			t = tool
-		}
+		t := OtherTool(curr, n.tool)
 
 		// keep advancing towards the goal
 		// get adj points and check their
@@ -242,17 +234,40 @@ func part1(input Input) {
 		for _, a := range adjs {
 			r := computeRegion(a, input.target, input.depth, regionCache, erosionCache, geoCache)
 			// enqueue with this tool
-			if toolBadRegion[n.tool] != r {
+			if ToolBadRegion[n.tool] != r {
 				queue = append(queue, Node{a, n.time + 1, n.tool, n.steps + 1, n.swaps})
 			}
 			// enqueue with the other tool (plus swap)
-			if toolBadRegion[t] != r {
-				queue = append(queue, Node{a, n.time + 1 + delay, t, n.steps + 1, n.swaps + 1})
+			if ToolBadRegion[t] != r {
+				queue = append(queue, Node{a, n.time + 1 + Delay, t, n.steps + 1, n.swaps + 1})
 			}
 		}
 	}
 
 	fmt.Printf("fewest minutes: %d\n", timer)
+}
+
+func next(queue []Node) (Node, []Node) {
+	n := queue[0]
+	q := queue[1:]
+	return n, q
+}
+
+func OtherTool(region, tool int) int {
+	ans := tool
+	// figure out the other tool to use for this region
+	for t, br := range ToolBadRegion {
+		if t == tool {
+			continue
+		}
+		if br == region {
+			continue
+		}
+
+		ans = t
+	}
+
+	return ans
 }
 
 type Node struct {
