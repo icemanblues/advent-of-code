@@ -74,7 +74,7 @@ func main() {
 
 	// part1("test.txt")
 	// part1("input23.txt")
-	part2("test2.txt")
+	// part2("test2.txt")
 	part2("input23.txt")
 }
 
@@ -144,7 +144,7 @@ func bruteForce(nanobots []Nanobot, minX, maxX, minY, maxY, minZ, maxZ int) Poin
 		for j := minY; j <= maxY; j++ {
 			for k := minZ; k <= maxZ; k++ {
 				if iter%10000 == 0 {
-					fmt.Printf("iter %d out of %d\n", iter, total)
+					fmt.Printf("iter %d out of %d with count %d\n", iter, total, bestCount)
 				}
 
 				p := Point{i, j, k}
@@ -237,16 +237,16 @@ func avgBot(bots []Nanobot) Point {
 	return avg(points)
 }
 
-func score(nanobots []Nanobot, point Point) (c, m int, in, out []Nanobot) {
+func score(nanobots []Nanobot, point Point) (c, m int) {
 	m = Manhattan(point)
 
 	c = 0
 	for _, n := range nanobots {
 		if d := Distance(point, n.point); d <= n.radius {
 			c++
-			in = append(in, n)
+			// in = append(in, n)
 		} else {
-			out = append(out, n)
+			// out = append(out, n)
 		}
 	}
 	return
@@ -275,38 +275,56 @@ func delta(a, b Point) (d, e, f int) {
 }
 
 // returns a new point 1 step closer to b (from a)
-func inc(a, b Point) Point {
-	xdiff := Abs(b.X - a.X)
-	ydiff := Abs(b.Y - a.Y)
-	zdiff := Abs(b.Z - a.Z)
-
+func inc(a, b Point) [][]Point {
 	dx, dy, dz := delta(a, b)
 
-	if xdiff > ydiff && xdiff > zdiff {
-		return Point{a.X + dx, a.Y, a.Z}
-	} else if ydiff > zdiff {
-		return Point{a.X, a.Y + dy, a.Z}
+	tier1 := []Point{
+		Point{a.X + dx, a.Y + dy, a.Z + dz},
 	}
-	return Point{a.X, a.Y, a.Z + dz}
+
+	tier2 := []Point{
+		Point{a.X + dx, a.Y + dy, a.Z},
+		// Point{a.X + dx, a.Y, a.Z + dz},
+		// Point{a.X, a.Y + dy, a.Z + dz},
+	}
+
+	tier3 := []Point{
+		Point{a.X + dx, a.Y, a.Z},
+		Point{a.X, a.Y + dy, a.Z},
+		Point{a.X, a.Y, a.Z + dz},
+	}
+
+	return [][]Point{tier1, tier2, tier3}
 }
 
 func cluster(start, end Point, nanobots []Nanobot) (Point, int, int) {
 	// walk from starting point to the average, moving by largest distance, one step at a time
 	// want to maximize count and minimize length
 	distance := Distance(start, end)
-	sc, sm, _, _ := score(nanobots, start)
-	currPoint := start
+	sc, sm := score(nanobots, start)
+
 	bestPoint := start
 	bestCount := sc
 	bestLen := sm
 	iter := 0
-	for {
+
+	currPoint := start
+	queue := []Point{currPoint}
+	visited := make(map[Point]struct{})
+	for len(queue) != 0 {
 		// !!! increment the point
 		// move closer to average
-		currPoint = inc(currPoint, end)
+		currPoint = queue[0]
+		queue = queue[1:]
+
+		// check if visited
+		if _, ok := visited[currPoint]; ok {
+			continue
+		}
+		visited[currPoint] = struct{}{}
 
 		// score the increment
-		c, m, _, _ := score(nanobots, currPoint)
+		c, m := score(nanobots, currPoint)
 		// fmt.Printf("iter %d: curr %v %d %d\n", iter, currPoint, c, m)
 		if c == bestCount && m < bestLen {
 			bestPoint = currPoint
@@ -320,11 +338,12 @@ func cluster(start, end Point, nanobots []Nanobot) (Point, int, int) {
 		}
 
 		if iter%100000 == 0 {
-			fmt.Printf("iter %d: curr %v best point, count, length %v %d %d out of total %d\n", iter, currPoint, bestPoint, bestCount, bestLen, distance)
+			fmt.Printf("iter %d: curr %v c: %d ||| best point, count, length %v %d %d out of total %d\n", iter, currPoint, c, bestPoint, bestCount, bestLen, distance)
 		}
 
-		if currPoint == end {
-			break
+		if c >= bestCount-3 {
+			tiers := inc(currPoint, end)
+			queue = append(queue, tiers[2]...)
 		}
 
 		iter++
@@ -436,8 +455,14 @@ func intervalSearch(ints []Interval) (int, int, int) {
 
 // 142831677 too high
 // 141205672 too high
-// 143324916 {44440530 53965408 44918978}, 840,
+// 143324916 too high
 // 107137375 too low
+// 135883863 not right
+// 131534700 not right
+
+// 133516352 {35271951 59071383 39173018}, 730,
+// 133514658 {35271095 59070536 39173027}, 730,
+// 130370534 {33699033 57498474 39173027}, 756,
 func part2(fn string) {
 	fmt.Println("Part 2")
 
@@ -469,12 +494,20 @@ func part2(fn string) {
 	fmt.Printf("y-axis: best: %d high: %d count: %d\n", yBest, yHigh, yCount)
 	fmt.Printf("z-axis: best: %d high: %d count: %d\n", zBest, zHigh, zCount)
 
-	seed := Point{xBest, yBest, zBest}
-	seedCount, seedLen, _, _ := score(nanobots, seed)
-	fmt.Printf("seed %v count %d length %d\n", seed, seedCount, seedLen)
+	seedLo := Point{xBest, yBest, zBest}
+	seedLoCount, seedLoLen := score(nanobots, seedLo)
+	fmt.Printf("seed %v count %d length %d\n", seedLo, seedLoCount, seedLoLen)
 
-	best := bruteForce(nanobots, xBest, xHigh, yBest, yHigh, zBest, zHigh)
-	answer := Manhattan(best)
-	fmt.Printf("Point is best %v with distance %d\n", best, answer)
+	// seedHi := Point{35271523, 59070965, 39173028}
+	// seedHi := Point{35271096, 59070537, 39173028}
+	// seedHi := Point{35271095, 59070536, 39173027}
+	// seedHi := Point{35270683, 59070124, 39173027}
+	seedHi := Point{33699033, 57498474, 39173027}
+	// seedHi := Point{xHigh, yHigh, zHigh}
+	// seedHiCount, seedHiLen := score(nanobots, seedHi)
+	// fmt.Printf("seed %v count %d length %d\n", seedHi, seedHiCount, seedHiLen)
+
+	bestPoint, bestCount, bestLen := cluster(seedHi, seedLo, nanobots)
+	fmt.Printf("Point is best %v with count %d and distance %d\n", bestPoint, bestCount, bestLen)
 
 }
