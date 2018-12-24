@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -142,6 +143,79 @@ func (g Group) EP() int {
 	return g.AP * g.Units
 }
 
+func lessGroup(a, b *Group) bool {
+	if a.EP() > b.EP() {
+		return true
+	}
+	if b.EP() > a.EP() {
+		return false
+	}
+
+	// must be the same EP
+	if a.Init > b.Init {
+		return true
+	}
+	if b.Init > a.Init {
+		return false
+	}
+
+	return true
+}
+
+func lessAtkGroup(a, b *Group) bool {
+	if a.Init >= b.Init {
+		return true
+	}
+	return false
+}
+
+// None if you do not have a target, return None
+var None = &Group{}
+
+func damage(a, e *Group) int {
+	// fmt.Printf("Group %v is attacking %v\n", a, e)
+	mult := 1
+	if _, ok := e.Immune[a.DMG]; ok {
+		mult = 0
+	}
+	if _, ok := e.Weak[a.DMG]; ok {
+		mult = 2
+	}
+
+	return mult * a.EP()
+}
+
+func chooseTarget(g *Group, enemies []*Group, taken map[*Group]struct{}) *Group {
+	var targets []*Group
+	td := -1
+	for _, e := range enemies {
+		if _, ok := taken[e]; ok {
+			continue
+		}
+
+		d := damage(g, e)
+		if d == 0 {
+			continue
+		}
+		if td == d {
+			targets = append(targets, e)
+		}
+		if td < d {
+			td = d
+			targets = []*Group{e}
+		}
+	}
+
+	if len(targets) == 0 {
+		return None
+	}
+
+	sort.Slice(targets, func(i, j int) bool {
+		return lessGroup(targets[i], targets[j])
+	})
+	return targets[0]
+}
+
 func printGroup(groups []*Group) {
 	for i, g := range groups {
 		fmt.Printf("%2d Group %2d %s %d Init: %2d HP: %d/%d Atk: %d %s Immune: %v Weakness %v\n", i, g.ID, g.Team, g.Units, g.Init, g.HP, g.MaxHP, g.AP, g.DMG, g.Immune, g.Weak)
@@ -154,19 +228,118 @@ func main() {
 	part1("test.txt")
 	part1("input24.txt")
 
-	part2()
+	// part2("test.txt")
 }
 
-func part1(fn string) {
-	fmt.Println("Part 1")
-
-	immune, infection := readInput(fn)
+func printState(immune, infection []*Group) {
 	fmt.Println("Immune")
 	printGroup(immune)
 	fmt.Println("Infection")
 	printGroup(infection)
 }
 
-func part2() {
+func battle(immune, infection *[]*Group) {
+	// Battle until we have a winner
+	for len(*immune) != 0 && len(*infection) != 0 {
+		// order the groups for target selection
+		var allGroups []*Group
+		for _, imm := range *immune {
+			allGroups = append(allGroups, imm)
+		}
+		for _, inf := range *infection {
+			allGroups = append(allGroups, inf)
+		}
+		sort.Slice(allGroups, func(i, j int) bool { return lessGroup(allGroups[i], allGroups[j]) })
+
+		// Target Selection
+		atkTargets := make(map[*Group]*Group)
+		taken := make(map[*Group]struct{})
+		for _, g := range allGroups {
+			// pick your target of the available ones
+			// TODO: Need to ignore targets that have already been choosen
+			// the values of the atkTargets map
+			if g.Team == ImmuneSystem {
+				t := chooseTarget(g, *infection, taken)
+				if t != None {
+					atkTargets[g] = t
+					taken[t] = struct{}{}
+				}
+			} else {
+				t := chooseTarget(g, *immune, taken)
+				if t != None {
+					atkTargets[g] = t
+					taken[t] = struct{}{}
+				}
+			}
+		}
+
+		// Attack Phase
+		sort.Slice(allGroups, func(i, j int) bool { return lessAtkGroup(allGroups[i], allGroups[j]) })
+		for _, g := range allGroups {
+			// dead units cant fight
+			if g.Units <= 0 {
+				continue
+			}
+
+			target, ok := atkTargets[g]
+			if !ok {
+				continue
+			}
+
+			d := damage(g, target)
+			target.Units = target.Units - (d / target.HP)
+
+			// if dead, remove it from the slice
+			if target.Units <= 0 {
+				target.Units = 0
+				immIdx, infIdx := -1, -1
+				for i, imm := range *immune {
+					if target == imm {
+						immIdx = i
+					}
+				}
+				for i, inf := range *infection {
+					if target == inf {
+						infIdx = i
+					}
+				}
+				if immIdx != -1 {
+					*immune = append((*immune)[:immIdx], (*immune)[immIdx+1:]...)
+				}
+				if infIdx != -1 {
+					*infection = append((*infection)[:infIdx], (*infection)[infIdx+1:]...)
+				}
+			}
+		}
+	}
+}
+
+// 10538
+func part1(fn string) {
+	fmt.Println("Part 1")
+
+	immune, infection := readInput(fn)
+	printState(immune, infection)
+
+	battle(&immune, &infection)
+
+	sumUnits := 0
+	for _, g := range immune {
+		sumUnits += g.Units
+	}
+	for _, g := range infection {
+		sumUnits += g.Units
+	}
+
+	printState(immune, infection)
+	fmt.Printf("Total units remaining: %d\n", sumUnits)
+}
+
+func part2(fn string) {
 	fmt.Println("Part 2")
+
+	immune, infection := readInput(fn)
+	printState(immune, infection)
+
+	battle(&immune, &infection)
 }
