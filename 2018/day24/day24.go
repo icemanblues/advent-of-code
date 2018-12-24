@@ -8,7 +8,10 @@ import (
 	"strings"
 )
 
+// ImmuneSystem .
 const ImmuneSystem = "Immune System:"
+
+// Infection .
 const Infection = "Infection:"
 
 func readInput(filename string) (immune, infection []*Group) {
@@ -149,6 +152,8 @@ func main() {
 	fmt.Println("Day 24: Immune System Simulator 20XX")
 
 	part1("test.txt")
+	part1("input24.txt")
+
 	part2()
 }
 
