@@ -23,7 +23,7 @@ func readInput(filename string) []string {
 }
 
 func main() {
-	fmt.Println("Day XX: Title")
+	fmt.Println("Day 24: Immune System Simulator 20XX")
 
 	part1()
 	part2()
