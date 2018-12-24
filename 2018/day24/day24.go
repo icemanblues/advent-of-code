@@ -15,7 +15,7 @@ const ImmuneSystem = "Immune System:"
 // Infection .
 const Infection = "Infection:"
 
-func readInput(filename string) (immune, infection []*Group) {
+func readInput(filename string, boost int) (immune, infection []*Group) {
 	file, err := os.Open(filename)
 	if err != nil {
 		fmt.Printf("something bad with file: %v\n", err)
@@ -103,6 +103,10 @@ func readInput(filename string) (immune, infection []*Group) {
 				dmg = words[i+2]
 				break
 			}
+		}
+		//apply the boost
+		if team == ImmuneSystem {
+			ap += boost
 		}
 
 		group := &Group{
@@ -225,21 +229,23 @@ func printGroup(groups []*Group) {
 func main() {
 	fmt.Println("Day 24: Immune System Simulator 20XX")
 
-	part1("test.txt")
-	part1("input24.txt")
+	// part1("test.txt")
+	// part1("input24.txt")
 
-	// part2("test.txt")
+	part2("test.txt")
+	part2("input24.txt")
 }
 
 func printState(immune, infection []*Group) {
-	fmt.Println("Immune")
+	fmt.Printf("Immune: %d\n", len(immune))
 	printGroup(immune)
-	fmt.Println("Infection")
+	fmt.Printf("Infection: %d\n", len(infection))
 	printGroup(infection)
 }
 
-func battle(immune, infection *[]*Group) {
+func battle(immune, infection *[]*Group) (string, int) {
 	// Battle until we have a winner
+
 	for len(*immune) != 0 && len(*infection) != 0 {
 		// order the groups for target selection
 		var allGroups []*Group
@@ -312,34 +318,49 @@ func battle(immune, infection *[]*Group) {
 			}
 		}
 	}
+
+	sumUnits := 0
+	for _, g := range *immune {
+		sumUnits += g.Units
+	}
+	for _, g := range *infection {
+		sumUnits += g.Units
+	}
+
+	if len(*immune) == 0 {
+		return Infection, sumUnits
+	}
+	return ImmuneSystem, sumUnits
 }
 
 // 10538
 func part1(fn string) {
 	fmt.Println("Part 1")
 
-	immune, infection := readInput(fn)
+	immune, infection := readInput(fn, 0)
 	printState(immune, infection)
 
-	battle(&immune, &infection)
-
-	sumUnits := 0
-	for _, g := range immune {
-		sumUnits += g.Units
-	}
-	for _, g := range infection {
-		sumUnits += g.Units
-	}
+	winner, sumUnits := battle(&immune, &infection)
 
 	printState(immune, infection)
-	fmt.Printf("Total units remaining: %d\n", sumUnits)
+	fmt.Printf("Winner %v !!! Total units remaining: %d\n", winner, sumUnits)
 }
 
 func part2(fn string) {
 	fmt.Println("Part 2")
 
-	immune, infection := readInput(fn)
-	printState(immune, infection)
+	// there was a stalemate, so I just had to work around it
+	// 27 - 35
+	boost := 40
+	for {
+		fmt.Println(boost)
+		immune, infection := readInput(fn, boost)
+		winner, sumUnits := battle(&immune, &infection)
+		fmt.Printf("Winner %v Boost %d !!! Total units remaining: %d\n", winner, boost, sumUnits)
+		if winner == Infection {
+			break
+		}
 
-	battle(&immune, &infection)
+		boost--
+	}
 }
