@@ -1,3 +1,5 @@
+### GO (GOLANG)
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -12,3 +14,15 @@
 *.out
 .vscode
 .DS_Store
+# emacs
+*~
+
+### JAVA
+.idea
+*.class
+*.iml
+
+### PYTHON
+
+__pycache__
+*.pyc
