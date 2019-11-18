@@ -12,50 +12,44 @@ const subTitle2: string = "subtitle 2";
 
 // reads entire file into memory, then splits it
 function readInputSync(filename: string): string[] {
-    const contents = fs.readFileSync(filename, "utf-8");
-    const lines = contents.split('\n')
+    const contents: string = fs.readFileSync(filename, "utf-8");
+    const lines: string[] = contents.trimRight().split(/\r?\n/);
     return lines;
 }
 
-const readInput = async (filename: string): Promise<string[]> => {
-
+async function readInput(filename: string): Promise<string[]> {
     const lines: string[] = [];
-    const fileStream = fs.createReadStream(filename);
-    const rl = readline.createInterface({
+    const fileStream: fs.ReadStream = fs.createReadStream(filename);
+    const rl: readline.Interface = readline.createInterface({
         input: fileStream,
         crlfDelay: Infinity,
     });
-    
-    for await (const line of rl) {
-        lines.push(line);
-    }
 
-    return lines;
+    rl.on('line', (line: string) => lines.push(line));
+    return new Promise<string[]>((resolve) => {
+        rl.on('close', () => resolve(lines));
+    });
 }
 
-const part1 = async function() {
+async function part1() {
     console.log(`Part 1: ${subTitle1}`);
 
-    const synclines: string[] = readInputSync('testXX.txt');
-    console.log(synclines);
-
-    const lines: string[] = await readInput('testXX.txt');
+    const lines: string[] = await readInput('input.txt');
     console.log(lines);
-
-    // for (let s of lines) {
-    //    console.log(s);
-    // }
 }
 
-const part2 = function() {
+async function part2() {
     console.log(`Part 2: ${subTitle2}`);
+
+    const lines: string[] = readInputSync('input.txt');
+    console.log(lines);
 }
 
-function main() {
+async function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
 
-    part1();
-    part2();
+    await part1();
+    await part2();
 }
 
 main();
