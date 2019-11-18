@@ -23,6 +23,9 @@
 *.iml
 
 ### PYTHON
-
 __pycache__
 *.pyc
+venv
+
+### TypeScript (JavaScript)
+node_modules
