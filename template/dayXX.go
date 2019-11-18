@@ -6,6 +6,13 @@ import (
 	"os"
 )
 
+const (
+	dayNum = "XX"
+	dayTitle = "Title"
+	subTitle1 = "Subtitle One"
+	subTitle2 = "Subtitle Two"
+)
+
 func readInput(filename string) []string {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -19,20 +26,21 @@ func readInput(filename string) []string {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
+
 	return lines
 }
 
-func main() {
-	fmt.Println("Day XX: Title")
-
-	part1()
-	part2()
-}
-
 func part1() {
-	fmt.Println("Part 1")
+	fmt.Printf("Part 1 : %v\n", subTitle1)
 }
 
 func part2() {
-	fmt.Println("Part 2")
+	fmt.Printf("Part 2 : %v\n", subTitle2)
+}
+
+func main() {
+	fmt.Printf("Day %v: %v\n", dayNum, dayTitle)
+
+	part1()
+	part2()
 }
