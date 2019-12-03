@@ -2,8 +2,13 @@
 
 Solutions to the Advent of Code challenges
 
-For more information on what is the Advent of Code, go to their website and learn more.
+For more information on what is the Advent of Code, go to their website and learn more.  
 https://adventofcode.com/
+
+## 2019
+
+Currently in progress. All days will be solved in TypeScript.  
+And using emacs as the code editor.
 
 ## 2018
 
