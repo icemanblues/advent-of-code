@@ -124,13 +124,20 @@ function moonsKey(moons: Moon[]): string {
 }
 
 function loopDetection(moons: Moon[]): number {
-    const s: Set<string> = new Set<string>();
+    const start: string = moonsKey(moons);
+    //const s: Set<string> = new Set<string>();
 
-    let steps: number = 0;
-    while (!s.has(moonsKey(moons))) {
-        s.add(moonsKey(moons));
+    let steps: number = 1;
+    step(moons);
+    //while (!s.has(moonsKey(moons))) {
+    while (start !== moonsKey(moons)) {
+        //s.add(moonsKey(moons));
         step(moons);
         steps++;
+
+        if (steps % 10000 === 0) {
+            console.log(steps);
+        }
     }
 
     return steps;
