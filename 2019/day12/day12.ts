@@ -37,10 +37,6 @@ class Moon {
     energy(): number {
         return this.pos.energy() * this.vel.energy();
     }
-
-    toString(): string {
-        return `${this.pos.x},${this.pos.y},${this.pos.z}|${this.vel.x},${this.vel.y},${this.vel.z}`;
-    }
 }
 
 function parse(filename: string): Moon[] {
@@ -119,50 +115,75 @@ function motion(moons: Moon[], steps: number): number {
     return moons.reduce((acc, m) => acc + m.energy(), 0);
 }
 
-function moonsKey(moons: Moon[]): string {
-    return moons.map(m => m.toString()).join('#');
-}
-
 function loopDetection(moons: Moon[]): number {
-    const start: string = moonsKey(moons);
-    //const s: Set<string> = new Set<string>();
+    const startX: number[] = [];
+    const startY: number[] = [];
+    const startZ: number[] = [];
 
+    moons.forEach(m => {
+        startX.push(m.pos.x);
+        startY.push(m.pos.y);
+        startZ.push(m.pos.z);
+    });
+
+    function atOrig(start: number[], accessor: (m: Moon) => number): boolean {
+        for (let i = 0; i < start.length; i++) {
+            if (start[i] !== accessor(moons[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    const intervals: number[] = [0, 0, 0];
     let steps: number = 1;
-    step(moons);
-    //while (!s.has(moonsKey(moons))) {
-    while (start !== moonsKey(moons)) {
-        //s.add(moonsKey(moons));
+    while (intervals.indexOf(0) !== -1) { // loop until there are no zeroes
         step(moons);
         steps++;
 
-        if (steps % 10000 === 0) {
-            console.log(steps);
+        if (intervals[0] === 0 && atOrig(startX, (m: Moon) => m.pos.x)) {
+            intervals[0] = steps;
+        }
+        if (intervals[1] === 0 && atOrig(startY, (m: Moon) => m.pos.y)) {
+            intervals[1] = steps;
+        }
+        if (intervals[2] === 0 && atOrig(startZ, (m: Moon) => m.pos.z)) {
+            intervals[2] = steps;
         }
     }
 
-    return steps;
+    return computeLCM(intervals);
+}
+
+function computeLCM(nums: number[]): number {
+    function gcd(a: number, b: number): number {
+        return !b ? a : gcd(b, a % b);
+    }
+
+    function lcm(a: number, b: number): number {
+        return (a * b) / gcd(a, b);
+    }
+
+    let n: number = nums[0];
+    return nums.reduce((acc, curr) => lcm(acc, curr), n);
 }
 
 function part1() {
     console.log('Part 1');
-
     const moons: Moon[] = parse('input.txt');
-    console.log(motion(moons, 1000));
+    console.log('Part 1', motion(moons, 1000));
 }
 
 function part2() {
     console.log('Part 2');
-
-    //const moons: Moon[] = parse('test-100-1940.txt');
     const moons: Moon[] = parse('input.txt');
-    console.log(loopDetection(moons));
-
+    console.log('Part 2', loopDetection(moons));
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
 
-    //part1();
+    part1();
     part2();
 }
 
