@@ -225,7 +225,6 @@ function paint(game: number[]) {
             maxY = game[i + 1];
         }
     }
-    console.log(maxX, maxY);
 
     let line: string[] = [];
     for (let y: number = 0; y <= maxY; y++) {
@@ -245,6 +244,25 @@ function paint(game: number[]) {
 
     let score: number = board.get(str(-1, 0));
     console.log('score:', score);
+
+    // find the ball and paddle
+    let ball: number = -1;
+    let paddle: number = -1;
+    board.forEach((v, k) => {
+        if (v === 4) {
+            ball = Number(k.split(/,/)[0]);
+        }
+        if (v === 3) {
+            paddle = Number(k.split(/,/)[0]);
+        }
+    });
+
+    if (ball < paddle) {
+        return -1;
+    } else if (ball > paddle) {
+        return 1;
+    }
+    return 0;
 }
 
 async function part1() {
@@ -264,7 +282,6 @@ async function part2() {
     const amp: Amp = new Amp('Part 2', lines, [], output);
 
     const joystick = () => {
-        // display screen
         paint(output);
 
         const rl = readline.createInterface({
@@ -279,17 +296,24 @@ async function part2() {
                 resolve(Number(answer));
             });
         });
+    }
+
+    const autopilot = () => {
+        const play: number = paint(output);
+        return new Promise<number>(resolve => resolve(play));
     };
 
-    amp.inputCallback = joystick;
+    amp.inputCallback = autopilot;
     await prog(amp);
+
+    paint(output);
 }
 
 async function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
 
     await part1();
-    await part2();
+    await part2(); // 12333 too low
 }
 
 main();
