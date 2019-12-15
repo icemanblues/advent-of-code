@@ -44,11 +44,12 @@ function parseReactions(filename: string): Map<string, Reaction> {
 
 const ORE: string = 'ORE';
 const FUEL: string = 'FUEL';
+const TRILLION: number = 1000000000000;
 
-function leastOre(rm: Map<string, Reaction>): number {
+function leastOre(rm: Map<string, Reaction>, fuel: number): number {
+    const needsMap: Map<string, number> = new Map([[FUEL, fuel]]);
     const producesMap: Map<string, number> = new Map();
 
-    const needsMap: Map<string, number> = new Map([[FUEL, 1]]);
     const queue: string[] = [FUEL];
     while (queue.length !== 0) {
         const curr: string = queue.shift();
@@ -64,11 +65,9 @@ function leastOre(rm: Map<string, Reaction>): number {
         const produces: number = m * r.count;
         producesMap.set(curr, getOrDefault(producesMap, curr, 0) + produces);
 
-        const reactionNeeds: Map<string, number> = new Map();
         r.inputs.forEach((v, k) => {
             const consumes: number = v * m;
             needsMap.set(k, getOrDefault(needsMap, k, 0) + consumes);
-            const idx: number = queue.indexOf(k);
             queue.push(k);
         });
     }
@@ -76,13 +75,46 @@ function leastOre(rm: Map<string, Reaction>): number {
     return needsMap.get(ORE);
 }
 
+function mostFuel(rm: Map<string, Reaction>): number {
+    let [lower, upper] = [0, TRILLION];
+    let f: number = Math.round((lower + upper) / 2);
+    let ore: number = 0;
+
+    let bestFuel: number = -1;
+    while (ore !== TRILLION) {
+        const ore: number = leastOre(rm, f);
+
+        if (ore === TRILLION) {
+            return f;
+        }
+        else if (ore < TRILLION) {
+            if (f == lower) {
+                break;
+            }
+
+            [lower, upper] = [f, upper];
+            bestFuel = f;
+        } else {
+            if (f == upper) {
+                break;
+            }
+
+            [lower, upper] = [lower, f];
+        }
+        f = Math.round((lower + upper) / 2);
+    }
+
+    return bestFuel;
+}
+
 function part1() {
     console.log('Part 1');
-    console.log('Part 1', leastOre(parseReactions('input.txt')));
+    console.log('Part 1', leastOre(parseReactions('input.txt'), 1));
 }
 
 function part2() {
     console.log('Part 2');
+    console.log('Part 2', mostFuel(parseReactions('input.txt')));
 }
 
 function main() {
