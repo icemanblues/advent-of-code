@@ -17,7 +17,6 @@ function intersection(grid: string[][]): number {
     for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
             if (grid[y][x] === '#') {
-                // now we need to check around it for scaffold
                 let b: boolean = true;
                 if (x > 0) {
                     b = b && grid[y][x - 1] === '#';
@@ -47,7 +46,8 @@ function buildMap(arr: number[]): string[][] {
 
     const map: string[][] = [];
     let row: string[] = [];
-    for (let n of arr) {
+    while (arr.length !== 0) {
+        const n = arr.shift();
         const tile = ascii.get(n);
         switch (tile) {
             case '#':
@@ -63,6 +63,10 @@ function buildMap(arr: number[]): string[][] {
                 y++;
                 x = 0;
                 row = [];
+                break;
+            default:
+                row.push(String.fromCharCode(n));
+                x++;
                 break;
         }
     }
@@ -96,6 +100,12 @@ const movement = new Map<string, number>([
 ]);
 
 
+function go(amp: Amp) {
+    while (!amp.isHalted) {
+        progAmp(amp);
+    }
+}
+
 function part1() {
     console.log('Part 1');
     const intcode = parseIntcode('input.txt');
@@ -103,26 +113,35 @@ function part1() {
     const output: number[] = [];
     const amp = new Amp('Aft', intcode, input, output);
     prog(amp);
-
     const grid = buildMap(output);
     console.log(intersection(grid));
-    displayGrid(grid);
 }
 
 function part2() {
     console.log('Part 2');
     const intcode = parseIntcode('input.txt');
     intcode[0] = 2;
-    const input: number[] = [];
+
+
+    const main = [65, 44, 66, 44, 67, 44, 66, 44, 65, 44, 67, 10];
+    const amove = [82, 44, 56, 44, 82, 44, 56, 10];
+    const bmove = [82, 44, 52, 44, 82, 44, 52, 44, 82, 44, 56, 10];
+    const cmove = [76, 44, 54, 44, 76, 44, 50, 10];
+    const video = [89, 10]; // y
+    //const video = [78, 10]; // no
+    const input: number[] = main.concat(amove, bmove, cmove, video);
     const output: number[] = [];
     const amp = new Amp('Aft', intcode, input, output);
     prog(amp);
+
+    const grid = buildMap(output);
+    displayGrid(grid);
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
 
-    part1();
+    //part1();
     part2();
 }
 
