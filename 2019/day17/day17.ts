@@ -70,9 +70,31 @@ function buildMap(arr: number[]): string[][] {
     return map;
 }
 
+function displayGrid(grid: string[][]): void {
+    for (let y = 0; y < grid.length; y++) {
+        console.log(grid[y].join(''));
+    }
+}
+
 const MEM_LIMIT = 20;
 
-const movement = new Map<string, number>();
+const grammar = new Map<string, number>([
+    [',', 44],
+    ['\n', 10]
+]);
+
+const COMMA = 44;
+const routines = new Map<string, number>([
+    ['A', 65],
+    ['B', 66],
+    ['C', 66]
+]);
+
+const movement = new Map<string, number>([
+    ['L', 76],
+    ['R', 82]
+]);
+
 
 function part1() {
     console.log('Part 1');
@@ -84,7 +106,7 @@ function part1() {
 
     const grid = buildMap(output);
     console.log(intersection(grid));
-
+    displayGrid(grid);
 }
 
 function part2() {
@@ -95,7 +117,6 @@ function part2() {
     const output: number[] = [];
     const amp = new Amp('Aft', intcode, input, output);
     prog(amp);
-
 }
 
 function main() {
