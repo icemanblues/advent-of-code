@@ -1,141 +1,18 @@
 import fs from 'fs';
+import { Amp, progAmp } from '../intcode';
 
 const dayNum: string = "07";
 const dayTitle: string = "Amplification Circuit";
 
-function readInputSync(filename: string): string[] {
-    const contents: string = fs.readFileSync(filename, "utf-8");
-    const lines: string[] = contents.trimRight().split(/,/);
-    return lines;
-}
-
-function opMode(inst: number): [number, boolean[]] {
-    const s: string = String(inst);
-    const op: number = Number(s.slice(s.length - 2));
-    const mode: boolean[] = [];
-
-    for (let i = s.length - 3; i >= 0; i--) {
-        mode.push(s.charAt(i) !== '0'); // true is immediate
-    }
-    if (mode.length !== 3) {
-        mode.push(false);
-    }
-
-    return [op, mode];
-}
-
-function lookup(intcodes: number[], index: number, mode: boolean): number {
-    if (mode) {
-        return intcodes[index];
-    }
-
-    return intcodes[intcodes[index]];
-}
-
-class Amp {
-    name: string;
-    isHalted: boolean;
-    intcodes: number[];
-    i: number;
-    inputs: number[];
-    outputs: number[];
-
-    constructor(name: string, ic: number[], ins: number[], outs: number[]) {
-        this.name = name;
-        this.intcodes = ic;
-        this.inputs = ins;
-        this.outputs = outs;
-
-        this.isHalted = false;
-        this.i = 0;
-    }
-
-    setValue(i: number, v: number) {
-        this.intcodes[this.intcodes[i]] = v;
-    }
-}
-
-// run until it halts, or outputs
-function progAmp(amp: Amp) {
-    if (amp.isHalted) {
-        console.log('Amp is halted.', amp.name);
-        return;
-    }
-
-    while (true) {
-        const inst: number = amp.intcodes[amp.i];
-        let op: number;
-        let modes: boolean[];
-        [op, modes] = opMode(inst);
-
-        if (99 === op) {
-            amp.isHalted = true;
-            break;
-        }
-        else if (1 === op) { // addition
-            const a: number = lookup(amp.intcodes, amp.i + 1, modes[0]);
-            const b: number = lookup(amp.intcodes, amp.i + 2, modes[1]);
-            amp.setValue(amp.i + 3, a + b);
-            amp.i += 4;
-        }
-        else if (2 === op) { // multiplication
-            const a: number = lookup(amp.intcodes, amp.i + 1, modes[0]);
-            const b: number = lookup(amp.intcodes, amp.i + 2, modes[1]);
-            amp.setValue(amp.i + 3, a * b);
-            amp.i += 4;
-        }
-        else if (3 === op) { // input
-            const input: number = amp.inputs.shift();
-            amp.setValue(amp.i + 1, input);
-            amp.i += 2;
-        }
-        else if (4 === op) { //output
-            const output: number = amp.intcodes[amp.intcodes[amp.i + 1]];
-            amp.outputs.push(output);
-            amp.i += 2;
-            return;
-        }
-        else if (5 === op) { // jump if not zero
-            const a: number = lookup(amp.intcodes, amp.i + 1, modes[0]);
-            const b: number = lookup(amp.intcodes, amp.i + 2, modes[1]);
-            if (a !== 0) {
-                amp.i = b;
-            } else {
-                amp.i += 3;
-            }
-        }
-        else if (6 === op) { // jump if zero
-            const a: number = lookup(amp.intcodes, amp.i + 1, modes[0]);
-            const b: number = lookup(amp.intcodes, amp.i + 2, modes[1]);
-            if (a === 0) {
-                amp.i = b;
-            } else {
-                amp.i += 3;
-            }
-        }
-        else if (7 === op) {
-            const a: number = lookup(amp.intcodes, amp.i + 1, modes[0]);
-            const b: number = lookup(amp.intcodes, amp.i + 2, modes[1]);
-            const c: number = (a < b) ? 1 : 0;
-            amp.setValue(amp.i + 3, c);
-            amp.i += 4;
-        }
-        else if (8 === op) {
-            const a: number = lookup(amp.intcodes, amp.i + 1, modes[0]);
-            const b: number = lookup(amp.intcodes, amp.i + 2, modes[1]);
-            const c: number = (a === b) ? 1 : 0;
-            amp.setValue(amp.i + 3, c);
-            amp.i += 4;
-        }
-        else {
-            console.log('illegal op code', op);
-            break;
-        }
-    }
+function readInputSync(filename: string): number[] {
+    return fs.readFileSync(filename, "utf-8")
+        .trimRight()
+        .split(/,/)
+        .map(Number);
 }
 
 function input(): number[] {
-    return readInputSync('input.txt').map(Number);
+    return readInputSync('input.txt');
 }
 
 function maxPhaseSetting(amp: number, ampIn: number, usedPhases: number[]): number {
