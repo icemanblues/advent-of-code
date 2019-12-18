@@ -1,12 +1,10 @@
 import fs from 'fs';
 import * as readline from 'readline';
 
+import { getOrDefault, str } from '../util';
+
 const dayNum: string = "13";
 const dayTitle: string = "Care Package";
-
-function getOrDefault<K, V>(m: Map<K, V>, k: K, d: V): V {
-    return m.has(k) ? m.get(k) : d;
-}
 
 function readInputSync(filename: string): string[] {
     const contents: string = fs.readFileSync(filename, "utf-8");
@@ -187,10 +185,6 @@ async function prog(amp: Amp): Promise<number[]> {
     return amp.outputs;
 }
 
-function str(x: number, y: number): string {
-    return `${x},${y}`;
-}
-
 function count(game: number[], tile: number): number {
     const board: Map<string, number> = new Map<string, number>();
 
@@ -313,7 +307,7 @@ async function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
 
     await part1();
-    await part2(); // 12333 too low
+    await part2();
 }
 
 main();
