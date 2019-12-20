@@ -7,10 +7,8 @@ import (
 )
 
 const (
-	dayNum = "XX"
+	dayNum   = "XX"
 	dayTitle = "Title"
-	subTitle1 = "Subtitle One"
-	subTitle2 = "Subtitle Two"
 )
 
 func readInput(filename string) []string {
@@ -31,16 +29,15 @@ func readInput(filename string) []string {
 }
 
 func part1() {
-	fmt.Printf("Part 1 : %v\n", subTitle1)
+	fmt.Println("Part 1")
 }
 
 func part2() {
-	fmt.Printf("Part 2 : %v\n", subTitle2)
+	fmt.Println("Part 2")
 }
 
 func main() {
 	fmt.Printf("Day %v: %v\n", dayNum, dayTitle)
-
 	part1()
 	part2()
 }

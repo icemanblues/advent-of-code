@@ -1,9 +1,5 @@
-###
-
 day_num = "XX"
 day_title = "Title"
-sub_title_1 = ""
-sub_title_2 = ""
 
 def read_input(filename):
     with open(filename) as f:
@@ -12,11 +8,11 @@ def read_input(filename):
 
 
 def part1():
-    print("Part 1", sub_title_1)
+    print("Part 1")
 
 
 def part2():
-    print("Part 2", sub_title_2)
+    print("Part 2")
 
 
 def main():
