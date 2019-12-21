@@ -10,21 +10,25 @@ function readInputSync(filename: string): string[] {
 }
 
 function isLetter(s: string): boolean {
-    if ('#' === s || '.' === s || ' ' === s) {
-        return false;
-    }
-    return true;
+    return !('#' === s || '.' === s || ' ' === s);
 }
 
 class Donut {
     grid: Map<string, string>;
     name: Map<string, string[]>;
     warp: Map<string, string>;
+    maxWidth: number;
+    maxHeight: number;
 
-    constructor(g: Map<string, string>, n: Map<string, string[]>, w: Map<string, string>) {
+    constructor(g: Map<string, string>,
+        n: Map<string, string[]>,
+        w: Map<string, string>,
+        maxX: number, maxY: number) {
         this.grid = g;
         this.name = n;
         this.warp = w;
+        this.maxWidth = maxX;
+        this.maxHeight = maxY;
     }
 }
 
@@ -40,8 +44,19 @@ function parse(input: string[]): Donut {
         return false;
     }
 
-    for (let y = 0; y < input.length; y++) {
-        for (let x = 0; x < input[y].length; x++) {
+    function updateName(label: string, point: [number, number]) {
+        if (isValid(point)) {
+            const arr = getOrDefault(name, label, []);
+            arr.push(strt(point));
+            name.set(label, arr);
+        }
+    }
+
+    const maxY = input.length;
+    const maxX = input[0].length;
+
+    for (let y = 0; y < maxY; y++) {
+        for (let x = 0; x < maxX; x++) {
             const tile = input[y].charAt(x);
             switch (tile) {
                 case '#':
@@ -53,14 +68,6 @@ function parse(input: string[]): Donut {
             }
 
             // check for the label and tile
-            function updateName(label: string, point: [number, number]) {
-                if (isValid(point)) {
-                    const arr = getOrDefault(name, label, []);
-                    arr.push(strt(point));
-                    name.set(label, arr);
-                }
-            }
-
             if (isLetter(tile)) {
                 // check left
                 if (x > 0) {
@@ -106,67 +113,103 @@ function parse(input: string[]): Donut {
     }
 
     // link the labels to the warps
-    name.forEach((points, label) => {
-        console.log(label, points);
+    name.forEach((points) => {
         if (points.length == 2) {
             warp.set(points[0], points[1]);
             warp.set(points[1], points[0]);
         }
     })
 
-    return new Donut(grid, name, warp);
+    return new Donut(grid, name, warp, maxX, maxY);
 }
 
 class Robot {
     loc: [number, number];
     steps: number;
-    constructor(loc: [number, number], steps: number) {
+    level: number;
+    constructor(loc: [number, number], steps: number, level: number) {
         this.loc = loc;
         this.steps = steps;
+        this.level = level;
+    }
+
+    str(): string {
+        return `${strt(this.loc)}|${this.level}`;
     }
 }
 
-function bfs(donut: Donut, start: [number, number], end: [number, number]): number {
-    const queue: Robot[] = [new Robot(start, 0)];
+function isOutsideWarp(donut: Donut, w: [number, number]): boolean {
+    // need to account for the 2 characters that the labels take up
+    return w[0] === 2 || w[1] === 2 ||
+        donut.maxWidth - 3 === w[0] || donut.maxHeight - 3 === w[1];
+}
+
+function bfs(donut: Donut,
+    start: [number, number], end: [number, number],
+    recursive: boolean): number {
+    const queue: Robot[] = [new Robot(start, 0, 0)];
     const visited: Set<string> = new Set();
     while (queue.length !== 0) {
         const curr = queue.shift();
-        const currStr = strt(curr.loc);
+        const currStr = curr.str();
         if (visited.has(currStr)) {
             continue;
         }
         visited.add(currStr);
 
         if (curr.loc[0] === end[0] && curr.loc[1] === end[1]) {
-            return curr.steps;
+            if (!recursive) {
+                return curr.steps;
+            }
+
+            // recursive... make sure that we are on the top most level
+            if (curr.level === 0) {
+                return curr.steps;
+            }
         }
 
-        adj(donut, curr.loc).forEach((p: [number, number]) => queue.push(new Robot(p, curr.steps + 1)));
+        adj(donut, curr, recursive).forEach((r: Robot) => queue.push(r));
     }
 
     return -1;
 }
 
-function adj(donut: Donut, [x, y]: [number, number]): [number, number][] {
-    const neighbors: [number, number][] = [];
+function adj(donut: Donut, robot: Robot, recursive: boolean): Robot[] {
+    const neighbors: Robot[] = [];
     [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([i, j]) => {
-        const [xi, yj] = [x + i, y + j];
+        const [xi, yj] = [robot.loc[0] + i, robot.loc[1] + j];
         if (donut.grid.get(str(xi, yj)) === '.') {
-            neighbors.push([xi, yj]);
+            neighbors.push(new Robot([xi, yj], robot.steps + 1, robot.level));
         }
     });
 
-    if (donut.warp.has(str(x, y))) {
-        neighbors.push(tuple(donut.warp.get(str(x, y))));
+    const loc = strt(robot.loc);
+    if (donut.warp.has(loc)) {
+        const ow = isOutsideWarp(donut, robot.loc);
+        const to = donut.warp.get(loc);
+        const r = new Robot(tuple(to), robot.steps + 1, robot.level);
+        if (recursive) {
+            if (ow) {
+                r.level -= 1;
+            } else {
+                r.level += 1;
+            }
+        }
+
+        // no outside warps if recursive
+        if (recursive && ow && robot.level === 0) {
+        } else {
+            neighbors.push(r);
+        }
     }
 
     return neighbors;
 }
 
-function short(donut: Donut) {
+function short(donut: Donut, recursive: boolean = false) {
     const start: [number, number] = tuple(donut.name.get('AA')[0]);
     const end: [number, number] = tuple(donut.name.get('ZZ')[0]);
-    return bfs(donut, start, end);
+    return bfs(donut, start, end, recursive);
 }
 
 function part1() {
@@ -178,13 +221,19 @@ function part1() {
         console.log(filename, short(donut));
     }
 
-    run('test-small-23.txt');
-    run('test-large-58.txt');
     run('input.txt');
 }
 
 function part2() {
     console.log('Part 2');
+
+    function run(filename: string, ans: number): void {
+        const test = readInputSync(filename);
+        const donut = parse(test);
+        console.log(filename, ans, short(donut, true));
+    }
+
+    run('input.txt', 490);
 }
 
 function main() {
