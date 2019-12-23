@@ -32,7 +32,9 @@ export class Amp {
     outputs: number[];
     mem: Map<number, number>;
     relBase: number;
+
     inputCallback: () => number;
+    outputCallback: (n: number) => void;
 
     constructor(name: string, ic: number[], ins: number[], outs: number[]) {
         this.name = name;
@@ -123,10 +125,15 @@ export function progAmp(amp: Amp) {
 
             amp.setValue(amp.i + 1, input, modes[0]);
             amp.i += 2;
+            return; // FIXME: not sure if this will break behavior too
         }
         else if (4 === op) { //output
             const output: number = amp.getValue(amp.i + 1, modes[0]);
-            amp.outputs.push(output);
+            if (amp.outputCallback) {
+                amp.outputCallback(output);
+            } else {
+                amp.outputs.push(output);
+            }
             amp.i += 2;
             return;
         }
