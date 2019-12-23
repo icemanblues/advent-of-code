@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { Amp, progAmp, prog } from '../intcode';
+import { Amp, prog } from '../intcode';
 
 const dayNum: string = "21";
 const dayTitle: string = "Springdroid Adventure";
@@ -15,7 +15,6 @@ function readSpringscript(filename: string): string[] {
 }
 
 const ASCII_LENGTH = 128; //0-127
-const MAX_LENGTH = 15;
 
 function toAscii(springscript: string[]): number[] {
     const r: number[] = [];
@@ -44,23 +43,24 @@ function display(output: number[]): number {
     return score;
 }
 
-function jump(file: string) {
+function jump(file: string): number {
     const springscript: string[] = readSpringscript(file);
     const intcode = read('input.txt');
     const output: number[] = [];
     const input: number[] = toAscii(springscript);
     const amp = new Amp('Day 21', intcode, input, output);
     prog(amp);
-    console.log(display(output));
+    return display(output);
 }
 
 function part1() {
     console.log('Part 1');
-    jump('part1.txt');
+    console.log(jump('part1.txt'));
 }
 
 function part2() {
     console.log('Part 2');
+    console.log(jump('part2.txt'));
 }
 
 function main() {
