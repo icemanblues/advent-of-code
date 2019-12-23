@@ -9,9 +9,17 @@ function readInput(filename: string): number[] {
 }
 
 class Network {
-    comps: Amp[];
-    msgIn: Map<string, number[]>;
-    msgOut: Map<string, number[]>;
+    private comps: Amp[];
+    private msgIn: Map<string, number[]>;
+    private msgOut: Map<string, number[]>;
+
+    private result: number = -1;
+
+    private useNat: boolean = false;
+    private natx: number = -1;
+    private naty: number = -1;
+    private natyPrev: number = -2;
+    private idleCount: Set<string> = new Set();
 
 
     constructor(n: number) {
@@ -34,6 +42,21 @@ class Network {
                 let v = -1;
                 if (inner.length > 0) {
                     v = inner.shift();
+                    this.idleCount.delete(amp.name);
+                } else {
+                    if (this.useNat && this.isIdle()) {
+                        this.idleCount.add(amp.name);
+                        if (this.idleCount.size === this.comps.length) {
+                            if (this.naty === this.natyPrev && this.naty !== -1) {
+                                this.halt(this.naty);
+                            }
+
+                            this.natyPrev = this.naty;
+                            const inZero = this.msgIn.get(String(0));
+                            inZero.push(this.natx);
+                            inZero.push(this.naty);
+                        }
+                    }
                 }
                 return v;
             };
@@ -48,39 +71,56 @@ class Network {
                     const y = outer.shift();
 
                     if (addr === 255) {
-                        console.log(`addr ${addr} x ${x} y ${y}`);
-                        // do I set all of them to halted?
-                        this.comps.forEach(a => a.isHalted = true);
-                        return;
+                        if (this.useNat) {
+                            this.natx = x;
+                            this.naty = y;
+                        } else {
+                            this.halt(y);
+                        }
+                    } else {
+                        const rcvr = this.msgIn.get(String(addr));
+                        rcvr.push(x);
+                        rcvr.push(y);
                     }
-
-                    const rcvr = this.msgIn.get(String(addr));
-                    rcvr.push(x);
-                    rcvr.push(y);
                 }
             };
         }
     }
 
-    run() {
+    run(enableNat: boolean = false): number {
+        this.useNat = enableNat;
         while (!this.comps.reduce((acc, curr) => acc && curr.isHalted, true)) {
             for (let i = 0; i < this.comps.length; i++) {
                 progAmp(this.comps[i]);
             }
         }
+        return this.result;
+    }
+
+    private isIdle(): boolean {
+        let count = 0;
+        this.msgIn.forEach((inputs, cname) => count += inputs.length);
+        return count === 0;
+    }
+
+    private halt(n: number) {
+        this.result = n;
+        this.comps.forEach(a => a.isHalted = true);
     }
 }
 
+const numComps = 50;
+
 function part1() {
     console.log('Part 1');
-    const numComps = 50;
     const network = new Network(numComps);
-
-    network.run(); // 19937
+    console.log(network.run()); // 19937
 }
 
 function part2() {
     console.log('Part 2');
+    const network = new Network(numComps);
+    console.log(network.run(true)); // 13758
 }
 
 function main() {

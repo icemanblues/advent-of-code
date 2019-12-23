@@ -87,7 +87,6 @@ export class Amp {
 // run until it halts, or outputs
 export function progAmp(amp: Amp) {
     if (amp.isHalted) {
-        console.log('Amp is halted.', amp.name);
         return;
     }
 
