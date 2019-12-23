@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import bigInt from 'big-integer';
 
 const dayNum: string = "22";
 const dayTitle: string = "Slam Shuffle";
@@ -8,58 +9,62 @@ function readInput(filename: string): string[] {
         .trimRight().split(/\r?\n/);
 }
 
-const DECK_LENGTH = 10007;
+interface Deck {
+    dealNewStack(): void;
+    cutCards(n: number): void;
+    dealIncrement(n: number): void;
+}
 
-class Deck {
+class DeckCards implements Deck {
     cards: number[];
 
     constructor(cards: number[]) {
         this.cards = cards;
     }
+
+    dealNewStack() {
+        this.cards.reverse();
+    }
+
+    cutCards(n: number) {
+        let p = n;
+        if (p < 0) {
+            p = this.cards.length + n;
+        }
+
+        this.cards = [...this.cards.slice(p), ...this.cards.slice(0, p)];
+    }
+
+    dealIncrement(n: number) {
+        const inc = new Array<number>(this.cards.length);
+        for (let i = 0; i < this.cards.length; i++) {
+            const idx = (n * i) % this.cards.length;
+            inc[idx] = this.cards[i];
+        }
+        this.cards = inc;
+    }
 }
 
-function newDeck(size: number): Deck {
+function newDeck(size: number): DeckCards {
     const cards = new Array<number>(size);
     for (let i = 0; i < size; i++) {
         cards[i] = i;
     }
-    return new Deck(cards);
-}
-
-function dealNewStack(deck: Deck) {
-    deck.cards.reverse();
-}
-
-function cutCards(deck: Deck, n: number) {
-    let p = n;
-    if (p < 0) {
-        p = deck.cards.length + n;
-    }
-
-    deck.cards = [...deck.cards.slice(p), ...deck.cards.slice(0, p)];
-}
-
-function dealIncrement(deck: Deck, n: number) {
-    const inc = new Array<number>(deck.cards.length);
-    for (let i = 0; i < deck.cards.length; i++) {
-        const idx = (n * i) % deck.cards.length;
-        inc[idx] = deck.cards[i];
-    }
-    deck.cards = inc;
+    return new DeckCards(cards);
 }
 
 function shuffle(deck: Deck, commands: string[]) {
     commands.forEach(l => {
         if ("deal into new stack" === l) {
-            dealNewStack(deck);
+            deck.dealNewStack();
         }
         else if (l.startsWith('deal with increment')) {
             const n = Number(l.split(/deal with increment /)[1]);
-            dealIncrement(deck, n);
+            deck.dealIncrement(n);
         }
         else if (l.startsWith('cut')) {
             const n = Number(l.split(/cut /)[1]);
-            cutCards(deck, n);
+            deck.cutCards(n);
         }
         else {
             console.log('unknown command', l);
@@ -67,88 +72,78 @@ function shuffle(deck: Deck, commands: string[]) {
     });
 }
 
-function test1() {
-    console.log('Test 1');
+class D implements Deck {
+    length: bigInt.BigInteger;
+    offset: bigInt.BigInteger;
+    increment: bigInt.BigInteger;
 
-    let deck = newDeck(10);
-    dealNewStack(deck);
-    console.log('test new stack', '9 8 7 6 5 4 3 2 1 0', deck.cards);
+    constructor(length: bigInt.BigInteger) {
+        this.length = length;
+        this.offset = bigInt(0);
+        this.increment = bigInt(1);
+    }
 
-    deck = newDeck(10);
-    cutCards(deck, 3);
-    console.log('test cut', '3 4 5 6 7 8 9 0 1 2', deck.cards);
+    dealNewStack(): void {
+        this.increment = this.increment.multiply(-1);
+        this.offset = this.offset.add(this.increment);
+    }
 
-    deck = newDeck(10);
-    cutCards(deck, -4);
-    console.log('test cut neg', '6 7 8 9 0 1 2 3 4 5', deck.cards);
+    cutCards(n: number): void {
+        this.offset = this.offset.add(this.increment.multiply(n));
+    }
 
-    deck = newDeck(10);
-    dealIncrement(deck, 3);
-    console.log('test increment', '0 7 4 1 8 5 2 9 6 3', deck.cards);
+    dealIncrement(n: number): void {
+        this.increment = this.increment.multiply(
+            inv(bigInt(n), this.length)
+        );
+    }
 
-    deck = newDeck(10);
-    let commands: string[] = [
-        'deal with increment 7',
-        'deal into new stack',
-        'deal into new stack'
-    ];
-    shuffle(deck, commands);
-    console.log('0 3 6 9 2 5 8 1 4 7', deck.cards);
+    index(n: number): bigInt.BigInteger {
+        return this.increment.multiply(n).add(this.offset).mod(this.length);
+    }
+}
 
-    deck = newDeck(10);
-    commands = [
-        'cut 6',
-        'deal with increment 7',
-        'deal into new stack'
-    ];
-    shuffle(deck, commands);
-    console.log('3 0 7 4 1 8 5 2 9 6', deck.cards);
-
-    deck = newDeck(10);
-    commands = [
-        'deal with increment 7',
-        'deal with increment 9',
-        'cut -2'
-    ];
-    shuffle(deck, commands);
-    console.log('6 3 0 7 4 1 8 5 2 9', deck.cards);
-
-    deck = newDeck(10);
-    commands = [
-        'deal into new stack',
-        'cut -2',
-        'deal with increment 7',
-        'cut 8',
-        'cut -4',
-        'deal with increment 7',
-        'cut 3',
-        'deal with increment 9',
-        'deal with increment 3',
-        'cut -1'
-    ];
-    shuffle(deck, commands);
-    console.log('9 2 5 8 1 4 7 0 3 6', deck.cards);
+// inv(n) = pow(n, MOD-2, MOD).
+function inv(n: bigInt.BigInteger, mod: bigInt.BigInteger): bigInt.BigInteger {
+    const modMinusTwo = mod.minus(2);
+    return n.modPow(modMinusTwo, mod);
 }
 
 function part1() {
     console.log('Part 1');
+    const DECK_LENGTH = 10007;
     const deck = newDeck(DECK_LENGTH);
     const commands = readInput('input.txt');
     shuffle(deck, commands);
-    console.log(deck.cards.indexOf(2019));
+    console.log(deck.cards.indexOf(2019)); // 7744
 }
 
 function part2() {
     console.log('Part 2');
-    const BIG_DECK = 119315717514047;
-    const deck = newDeck(BIG_DECK);
-    const commands = readInput('input.txt');
-    const BIG_SHUFFLE = 101741582076661;
-    for (let i = 0; i < BIG_SHUFFLE; i++) {
-        shuffle(deck, commands);
-    }
-    console.log(deck.cards[2020]);
 
+    const BIG_DECK = bigInt(119315717514047);
+    const BIG_SHUFFLE = bigInt(101741582076661);
+    const commands = readInput('input.txt');
+    const deck = new D(BIG_DECK);
+
+    shuffle(deck, commands);
+    const offset_diff = deck.offset;
+    const increment_mul = deck.increment;
+
+    const increment = increment_mul.modPow(BIG_SHUFFLE, BIG_DECK);
+
+    const offset_diff_multipler = bigInt(1).minus(
+        increment_mul.modPow(BIG_SHUFFLE, BIG_DECK)
+    );
+    const offset_diff_inv = inv(bigInt(1).minus(increment_mul), BIG_DECK);
+    const offset = offset_diff
+        .multiply(offset_diff_multipler)
+        .multiply(offset_diff_inv);
+
+    // value at location n
+    const value = offset.add(increment.multiply(2020));
+    console.log('2020', BIG_DECK.add(value.mod(BIG_DECK)));
+    // 57817797345992
 }
 
 function main() {
