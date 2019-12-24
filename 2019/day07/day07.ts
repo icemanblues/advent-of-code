@@ -1,18 +1,10 @@
-import fs from 'fs';
-import { Amp, progAmp } from '../intcode';
+import { Amp, progAmp, parseIntcode } from '../intcode';
 
 const dayNum: string = "07";
 const dayTitle: string = "Amplification Circuit";
 
-function readInputSync(filename: string): number[] {
-    return fs.readFileSync(filename, "utf-8")
-        .trimRight()
-        .split(/,/)
-        .map(Number);
-}
-
 function input(): number[] {
-    return readInputSync('input.txt');
+    return parseIntcode('input.txt');
 }
 
 function maxPhaseSetting(amp: number, ampIn: number, usedPhases: number[]): number {
@@ -91,18 +83,15 @@ function maxFeedback(phases: number[]): number {
 }
 
 function part1() {
-    console.log('Part 1');
-    console.log(maxPhaseSetting(0, 0, []));
+    console.log('Part 1', maxPhaseSetting(0, 0, []));
 }
 
 function part2() {
-    console.log('Part 2');
-    console.log(maxFeedback([]));
+    console.log('Part 2', maxFeedback([]));
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
-
     part1();
     part2();
 }

@@ -1,21 +1,11 @@
-import fs from 'fs';
-
 import { str, tuple } from '../util';
-import { Amp, prog, progAmp } from '../intcode';
+import { Amp, prog, parseIntcode } from '../intcode';
 
 const dayNum: string = "13";
 const dayTitle: string = "Care Package";
 
-function readInputSync(filename: string): number[] {
-    return fs.readFileSync(filename, "utf-8")
-        .trimRight()
-        .split(/,/)
-        .map(Number);
-}
-
 function count(game: number[], tile: number): number {
     const board = gameBoard(game);
-
     let counter: number = 0;
     board.forEach((v, k) => {
         if (v === tile) {
@@ -70,20 +60,18 @@ function paint(board: Map<string, number>) {
 }
 
 function part1() {
-    console.log('Part 1');
-    const lines: number[] = readInputSync('input.txt');
+    const intcode: number[] = parseIntcode('input.txt');
     const output: number[] = [];
-    const amp: Amp = new Amp('Part 1', lines, [], output);
+    const amp: Amp = new Amp('Part 1', intcode, [], output);
     prog(amp);
-    console.log('part1', count(output, 2));
+    console.log('Part 1', count(output, 2));
 }
 
 function part2() {
-    console.log('Part 2');
-    const lines: number[] = readInputSync('input.txt');
-    lines[0] = 2;
+    const intcode: number[] = parseIntcode('input.txt');
+    intcode[0] = 2;
     const output: number[] = [];
-    const amp: Amp = new Amp('Part 2', lines, [], output);
+    const amp: Amp = new Amp('Part 2', intcode, [], output);
 
     const autopilot = () => {
         const board = gameBoard(output);
@@ -106,13 +94,12 @@ function part2() {
             return 1;
         }
         return 0;
-
     };
 
     amp.inputCallback = autopilot;
     prog(amp);
     const board = gameBoard(output);
-    console.log(score(board));
+    console.log('Part 2', score(board));
 }
 
 function main() {

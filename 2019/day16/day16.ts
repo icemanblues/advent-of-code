@@ -62,14 +62,12 @@ function fftOptimized(input: number[], phases: number): string {
 }
 
 function part1() {
-    console.log('Part 1');
     const input = readInputSync('input.txt');
     const output = fft(input, 100)
     console.log('Part 1', output.substring(0, 8));
 }
 
 function part2() {
-    console.log('Part 2');
     const input = readInputSync('input.txt');
     const offset = Number(input.slice(0, 7).join(''));
 
@@ -82,12 +80,11 @@ function part2() {
     big = big.slice(offset);
 
     const output = fftOptimized(big, 100)
-    console.log('Part 1', output.substring(0, 8));
+    console.log('Part 2', output.substring(0, 8));
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
-
     part1(); // 82435530
     part2(); // 83036156
 }

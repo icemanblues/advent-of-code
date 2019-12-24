@@ -1,12 +1,12 @@
-import fs from 'fs';
+import * as fs from 'fs';
+import { str, strt } from '../util';
 
 const dayNum: string = "10";
 const dayTitle: string = "Monitoring Station";
 
 function readInputSync(filename: string): string[] {
-    const contents: string = fs.readFileSync(filename, "utf-8");
-    const lines: string[] = contents.trimRight().split(/\r?\n/);
-    return lines;
+    return fs.readFileSync(filename, "utf-8")
+        .trimRight().split(/\r?\n/);
 }
 
 function asteroids(lines: string[]): [number, number][] {
@@ -19,14 +19,6 @@ function asteroids(lines: string[]): [number, number][] {
         }
     });
     return a;
-}
-
-function str(x: number, y: number): string {
-    return `${x},${y}`;
-}
-
-function strt(t: [number, number]): string {
-    return str(t[0], t[1]);
 }
 
 function asteroidDetect(filename: string): number {
@@ -63,7 +55,6 @@ function asteroidDetect(filename: string): number {
             }
             i--;
         }
-
 
         // current row right
         i = a[0] + 1;
@@ -139,7 +130,6 @@ function asteroidDetect(filename: string): number {
         }
     });
 
-    console.log(filename, maxTuple);
     return maxCount;
 }
 
@@ -283,7 +273,6 @@ function part2() {
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
-
     part1();
     part2();
 }

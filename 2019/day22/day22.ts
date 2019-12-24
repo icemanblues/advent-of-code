@@ -5,8 +5,7 @@ const dayNum: string = "22";
 const dayTitle: string = "Slam Shuffle";
 
 function readInput(filename: string): string[] {
-    return fs.readFileSync(filename, "utf-8")
-        .trimRight().split(/\r?\n/);
+    return fs.readFileSync(filename, "utf-8").trimRight().split(/\r?\n/);
 }
 
 interface Deck {
@@ -103,24 +102,21 @@ class D implements Deck {
     }
 }
 
-// inv(n) = pow(n, MOD-2, MOD).
+// inv(n) = pow(n, MOD-2, MOD)
 function inv(n: bigInt.BigInteger, mod: bigInt.BigInteger): bigInt.BigInteger {
     const modMinusTwo = mod.minus(2);
     return n.modPow(modMinusTwo, mod);
 }
 
 function part1() {
-    console.log('Part 1');
     const DECK_LENGTH = 10007;
     const deck = newDeck(DECK_LENGTH);
     const commands = readInput('input.txt');
     shuffle(deck, commands);
-    console.log(deck.cards.indexOf(2019)); // 7744
+    console.log('Part 1', deck.cards.indexOf(2019));
 }
 
 function part2() {
-    console.log('Part 2');
-
     const BIG_DECK = bigInt(119315717514047);
     const BIG_SHUFFLE = bigInt(101741582076661);
     const commands = readInput('input.txt');
@@ -142,8 +138,7 @@ function part2() {
 
     // value at location n
     const value = offset.add(increment.multiply(2020));
-    console.log('2020', BIG_DECK.add(value.mod(BIG_DECK)));
-    // 57817797345992
+    console.log('Part 2', '2020', BIG_DECK.add(value.mod(BIG_DECK)));
 }
 
 function main() {

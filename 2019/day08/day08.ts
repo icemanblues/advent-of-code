@@ -1,15 +1,14 @@
-import fs from 'fs';
+import * as fs from 'fs';
+import { getOrDefault } from '../util';
 
 const dayNum: string = "08";
 const dayTitle: string = "Space Image Format";
 
-function readInputSync(filename: string): string[] {
-    const contents: string = fs.readFileSync(filename, "utf-8");
-    const lines: string[] = contents.trimRight().split(/\r?\n/);
-    return lines;
+function readInputSync(filename: string): string {
+    return fs.readFileSync(filename, "utf-8").trimRight();
 }
 
-const pixels: string = readInputSync('input.txt')[0];
+const pixels: string = readInputSync('input.txt');
 const width: number = 25;
 const height: number = 6;
 const layerLen: number = width * height;
@@ -21,12 +20,7 @@ function splitLayer(pixels: string, w: number, h: number): string[] {
     for (let i: number = 0; i < pixels.length; i += chunk) {
         chunks.push(pixels.slice(i, i + chunk));
     }
-
     return chunks;
-}
-
-function getOrDefault(m: Map<string, number>, k: string, d: number) {
-    return m.has(k) ? m.get(k) : d;
 }
 
 function validate(layers: string[]): number {
@@ -41,7 +35,6 @@ function validate(layers: string[]): number {
             counts.set(digit, c + 1);
         }
 
-
         const numZero: number = getOrDefault(counts, '0', 0);
         if (numZero < minZero) {
             minZero = numZero;
@@ -54,7 +47,6 @@ function validate(layers: string[]): number {
 
 function render(layers: string[]): string {
     const s: string[] = [];
-
     for (let i: number = 0; i < layerLen; i++) {
         let c: string = 'X';
         for (let j: number = 0; j < layers.length; j++) {
@@ -66,7 +58,6 @@ function render(layers: string[]): string {
         }
         s.push(c);
     }
-
     return s.join('');
 }
 
@@ -79,15 +70,14 @@ function printImage(image: string, w: number): void {
 }
 
 function part1() {
-    console.log('Part 1');
-    console.log(validate(layers));
+    console.log('Part 1', validate(layers));
 }
 
 function part2() {
-    console.log('Part 2');
     const layers: string[] = splitLayer(pixels, width, height);
     const image: string = render(layers);
     printImage(image, width);
+    console.log('Part 2', 'CEKUA');
 }
 
 function main() {

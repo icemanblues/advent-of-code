@@ -1,11 +1,8 @@
-import fs from 'fs';
+import * as fs from 'fs';
+import { getOrDefault } from '../util';
 
 const dayNum: string = "14";
 const dayTitle: string = "Space Stoichiometry";
-
-function getOrDefault<K, V>(m: Map<K, V>, k: K, d: V): V {
-    return m.has(k) ? m.get(k) : d;
-}
 
 function readInputSync(filename: string): string[] {
     return fs.readFileSync(filename, "utf-8").trimRight().split(/\r?\n/);
@@ -25,7 +22,6 @@ class Reaction {
 
 function parseReactions(filename: string): Map<string, Reaction> {
     const rm: Map<string, Reaction> = new Map();
-
     readInputSync(filename).forEach(l => {
         let [input, output] = l.split(/=>/)
         function mapper(s: string): Map<string, number> {
@@ -108,18 +104,15 @@ function mostFuel(rm: Map<string, Reaction>): number {
 }
 
 function part1() {
-    console.log('Part 1');
     console.log('Part 1', leastOre(parseReactions('input.txt'), 1));
 }
 
 function part2() {
-    console.log('Part 2');
     console.log('Part 2', mostFuel(parseReactions('input.txt')));
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
-
     part1();
     part2();
 }

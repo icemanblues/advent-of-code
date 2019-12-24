@@ -1,16 +1,8 @@
-import fs from 'fs';
-import { Amp, progAmp } from '../intcode';
-import { str, strt, tuple } from '../util';
+import { Amp, progAmp, parseIntcode } from '../intcode';
+import { strt, tuple } from '../util';
 
 const dayNum: string = "15";
 const dayTitle: string = "Oxygen System";
-
-function readInputSync(filename: string): number[] {
-    return fs.readFileSync(filename, "utf-8")
-        .trimRight()
-        .split(/,/)
-        .map(Number);
-}
 
 enum Direction {
     North = 1,
@@ -78,55 +70,7 @@ enum Tile {
     Oxygen,
 }
 
-function printTile(t: Tile): string {
-    if (t === Tile.Wall) {
-        return '#';
-    } else if (t === Tile.Valid) {
-        return '.';
-    } else if (t === Tile.Oxygen) {
-        return 'O';
-    } else {
-        return ' ';
-    }
-}
-
-function displayBoard(grid: Map<string, number>, robot: Robot) {
-    let minX: number = Number.MAX_VALUE;
-    let minY: number = Number.MAX_VALUE;
-    let maxX: number = Number.MIN_VALUE;
-    let maxY: number = Number.MIN_VALUE;
-    grid.forEach((v, k) => {
-        const [x, y] = tuple(k);
-        if (x < minX) {
-            minX = x;
-        }
-        if (y < minY) {
-            minY = y;
-        }
-        if (x > maxX) {
-            maxX = x;
-        }
-        if (y > maxY) {
-            maxY = y;
-        }
-    });
-
-    for (let y: number = minY; y <= maxY; y++) {
-        const line: string[] = [];
-        for (let x: number = minX; x <= maxX; x++) {
-            if (strt(robot.loc) === str(x, y)) {
-                line.push('D');
-            } else {
-                const spot: number = grid.get(str(x, y));
-                line.push(printTile(spot));
-            }
-        }
-        console.log(line.join(''));
-    }
-}
-
-function explore(robot: Robot, intcode: number[]): Map<string, number> {
-    const grid: Map<string, number> = new Map();
+function explore(robot: Robot, intcode: number[], grid: Map<string, number>): number {
     const starts: string = strt(robot.loc);
     grid.set(starts, Tile.Valid);
 
@@ -134,11 +78,13 @@ function explore(robot: Robot, intcode: number[]): Map<string, number> {
     const output: number[] = [];
     const amp: Amp = new Amp('robot', intcode, input, output);
 
+    let answer: number = -1;
     while (true) {
         // stop exploring when there is no more forward and no more backwards
         if (robot.backtrack && robot.pathStack.length === 0) {
             break;
         }
+
 
         // use the robot to pick our next move
         let dir: Direction = robot.pickNext(grid);
@@ -150,8 +96,6 @@ function explore(robot: Robot, intcode: number[]): Map<string, number> {
         const writeLoc: [number, number] = move(dir, robot.loc);
         grid.set(strt(writeLoc), resp);
 
-        // TODO: this should be a call to robot
-        // TODO: move should be a robot function
         // update the robot here
         if (resp !== Tile.Wall) {
             robot.loc = writeLoc;
@@ -161,11 +105,11 @@ function explore(robot: Robot, intcode: number[]): Map<string, number> {
         }
 
         if (resp === Tile.Oxygen) {
-            console.log('Part 1', robot.pathStack.length);
+            answer = robot.pathStack.length;
         }
     }
 
-    return grid;
+    return answer;
 }
 
 class Robot {
@@ -236,23 +180,22 @@ function expand(grid: Map<string, number>): number {
 
 
 function part1() {
-    console.log('Part 1');
     const robot = new Robot();
-    const intcode: number[] = readInputSync('input.txt');
-    explore(robot, intcode);
+    const intcode: number[] = parseIntcode('input.txt');
+    const grid: Map<string, number> = new Map();
+    console.log('Part 1', explore(robot, intcode, grid));
 }
 
 function part2() {
-    console.log('Part 2');
     const robot = new Robot();
-    const intcode: number[] = readInputSync('input.txt');
-    const grid = explore(robot, intcode);
-    console.log(expand(grid));
+    const intcode: number[] = parseIntcode('input.txt');
+    const grid: Map<string, number> = new Map();
+    explore(robot, intcode, grid);
+    console.log('Part 2', expand(grid));
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
-
     part1();
     part2();
 }

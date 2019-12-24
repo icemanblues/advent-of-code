@@ -1,12 +1,10 @@
-import fs from 'fs';
+import * as fs from 'fs';
 
 const dayNum: string = "03";
 const dayTitle: string = "Crossed Wires";
 
 function readFile(filename: string): string[] {
-    const contents: string = fs.readFileSync(filename, "utf-8");
-    const lines: string[] = contents.trimRight().split(/\r?\n/);
-    return lines;
+    return fs.readFileSync(filename, "utf-8").trimRight().split(/\r?\n/);
 }
 
 class Point {
@@ -44,17 +42,14 @@ function minManhattanDist(wire1: string[], wire2: string[]): number {
 }
 
 function part1() {
-    console.log('Part 1');
-
     const lines: string[] = readFile('input.txt');
     const wire1: string[] = lines[0].split(/,/);
     const wire2: string[] = lines[1].split(/,/);
-    console.log(minManhattanDist(wire1, wire2));
+    console.log('Part 1', minManhattanDist(wire1, wire2));
 }
 
 function wireList(wire: string[]): string[] {
     const l: string[] = [];
-    let step: number = 0;
     let curr: Point = new Point(0, 0);
 
     wire.forEach(str => {
@@ -91,13 +86,11 @@ function wireList(wire: string[]): string[] {
                     l.push(curr.toString());
                 }
                 break;
-
         }
     });
 
     return l;
 }
-
 
 function stepCount(wire1: string[], wire2: string[]): number {
     const l1: string[] = wireList(wire1);
@@ -124,17 +117,14 @@ function stepCount(wire1: string[], wire2: string[]): number {
 }
 
 function part2() {
-    console.log('Part 2');
-
     const lines: string[] = readFile('input.txt');
     const wire1: string[] = lines[0].split(/,/);
     const wire2: string[] = lines[1].split(/,/);
-    console.log(stepCount(wire1, wire2));
+    console.log('Part 2', stepCount(wire1, wire2));
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle} `);
-
     part1();
     part2();
 }

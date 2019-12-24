@@ -84,8 +84,8 @@ export class Amp {
     }
 }
 
-// run until it halts, or outputs
-export function progAmp(amp: Amp) {
+// run until it halts, or (outputs, inputs) conditionally
+export function progAmp(amp: Amp, isOutput: boolean = true, isInput: boolean = false) {
     if (amp.isHalted) {
         return;
     }
@@ -124,7 +124,10 @@ export function progAmp(amp: Amp) {
 
             amp.setValue(amp.i + 1, input, modes[0]);
             amp.i += 2;
-            return; // FIXME: not sure if this will break behavior too
+
+            if (isInput) {
+                return;
+            }
         }
         else if (4 === op) { //output
             const output: number = amp.getValue(amp.i + 1, modes[0]);
@@ -134,7 +137,10 @@ export function progAmp(amp: Amp) {
                 amp.outputs.push(output);
             }
             amp.i += 2;
-            return;
+
+            if (isOutput) {
+                return;
+            }
         }
         else if (5 === op) { // jump if not zero
             const a: number = amp.getValue(amp.i + 1, modes[0]);

@@ -50,8 +50,7 @@ function password(valid: (s: string) => boolean): number {
 }
 
 function part1() {
-    console.log('Part 1');
-    console.log(password(isValid));
+    console.log('Part 1', password(isValid));
 }
 
 function adjOnlyTwo(s: string): boolean {
@@ -81,8 +80,7 @@ function isValidTwo(s: string): boolean {
 }
 
 function part2() {
-    console.log('Part 2');
-    console.log(password(isValidTwo));
+    console.log('Part 2', password(isValidTwo));
 }
 
 function main() {

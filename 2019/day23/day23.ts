@@ -1,12 +1,7 @@
-import * as fs from 'fs';
-import { Amp, prog, progAmp } from '../intcode';
+import { Amp, progAmp, parseIntcode } from '../intcode';
 
 const dayNum: string = "23";
 const dayTitle: string = "Category Six";
-
-function readInput(filename: string): number[] {
-    return fs.readFileSync(filename, "utf-8").trimRight().split(/,/).map(Number);
-}
 
 class Network {
     private comps: Amp[];
@@ -28,7 +23,7 @@ class Network {
 
         this.comps = new Array<Amp>(n);
         for (let i = 0; i < n; i++) {
-            const intcode = readInput('input.txt');
+            const intcode = parseIntcode('input.txt');
             const input: number[] = [i];
             const output: number[] = [];
             const amp = new Amp(String(i), intcode, input, output);
@@ -91,7 +86,7 @@ class Network {
         this.useNat = enableNat;
         while (!this.comps.reduce((acc, curr) => acc && curr.isHalted, true)) {
             for (let i = 0; i < this.comps.length; i++) {
-                progAmp(this.comps[i]);
+                progAmp(this.comps[i], true, true);
             }
         }
         return this.result;
@@ -109,18 +104,16 @@ class Network {
     }
 }
 
-const numComps = 50;
+const NUM_COMPS = 50;
 
 function part1() {
-    console.log('Part 1');
-    const network = new Network(numComps);
-    console.log(network.run()); // 19937
+    const network = new Network(NUM_COMPS);
+    console.log('Part 1', network.run()); // 19937
 }
 
 function part2() {
-    console.log('Part 2');
-    const network = new Network(numComps);
-    console.log(network.run(true)); // 13758
+    const network = new Network(NUM_COMPS);
+    console.log('Part 2', network.run(true)); // 13758
 }
 
 function main() {

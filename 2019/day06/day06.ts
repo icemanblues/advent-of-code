@@ -1,15 +1,11 @@
-import fs from 'fs';
+import * as fs from 'fs';
 
 const dayNum: string = "06";
 const dayTitle: string = "Universal Orbit Map";
 
 function readInputSync(filename: string): string[] {
-    const contents: string = fs.readFileSync(filename, "utf-8");
-    const lines: string[] = contents.trimRight().split(/\r?\n/);
-    return lines;
+    return fs.readFileSync(filename, "utf-8").trimRight().split(/\r?\n/);
 }
-
-const lines: string[] = readInputSync('input.txt');
 
 function orbits(lines: string[]): Map<string, string> {
     const m: Map<string, string> = new Map<string, string>();
@@ -22,11 +18,10 @@ function orbits(lines: string[]): Map<string, string> {
     return m;
 }
 
+const lines: string[] = readInputSync('input.txt');
+
 function part1() {
-    console.log('Part 1');
-
     const orbitMap = orbits(lines);
-
     const s: Set<string> = new Set<string>();
     orbitMap.forEach((v, k) => {
         s.add(k);
@@ -43,7 +38,7 @@ function part1() {
             currbit = orbitMap.get(curr);
         }
     });
-    console.log(count);
+    console.log('Part 1', count);
 }
 
 class Move {
@@ -80,18 +75,17 @@ function edges(lines: string[]): Map<string, string[]> {
 }
 
 function part2() {
-    console.log('Part 2');
-
     const e: Map<string, string[]> = edges(lines);
     const visited: Set<string> = new Set<string>();
     const start: Move = new Move('YOU', 0);
     const queue: Move[] = [start];
 
+    let answer: number = -1;
     while (queue.length !== 0) {
         const curr: Move = queue.shift();
 
         if (curr.planet === 'SAN') {
-            console.log(curr.count - 2);
+            answer = curr.count - 2;
             break;
         }
 
@@ -106,11 +100,12 @@ function part2() {
             });
         }
     }
+
+    console.log('Part 2', answer);
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
-
     part1();
     part2();
 }

@@ -1,12 +1,10 @@
-import fs from 'fs';
+import * as fs from 'fs';
 
 const dayNum: string = "12";
 const dayTitle: string = "The N-Body Problem";
 
 function readInputSync(filename: string): string[] {
-    const contents: string = fs.readFileSync(filename, "utf-8");
-    const lines: string[] = contents.trimRight().split(/\r?\n/);
-    return lines;
+    return fs.readFileSync(filename, "utf-8").trimRight().split(/\r?\n/);
 }
 
 class Point3D {
@@ -169,20 +167,17 @@ function computeLCM(nums: number[]): number {
 }
 
 function part1() {
-    console.log('Part 1');
     const moons: Moon[] = parse('input.txt');
     console.log('Part 1', motion(moons, 1000));
 }
 
 function part2() {
-    console.log('Part 2');
     const moons: Moon[] = parse('input.txt');
     console.log('Part 2', loopDetection(moons));
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
-
     part1();
     part2();
 }

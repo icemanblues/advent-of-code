@@ -213,27 +213,21 @@ function short(donut: Donut, recursive: boolean = false) {
 }
 
 function part1() {
-    console.log('Part 1');
-
-    function run(filename: string) {
+    function run(filename: string): number {
         const test = readInputSync(filename);
         const donut = parse(test);
-        console.log(filename, short(donut));
+        return short(donut);
     }
-
-    run('input.txt');
+    console.log('Part 1', run('input.txt'));
 }
 
 function part2() {
-    console.log('Part 2');
-
-    function run(filename: string, ans: number): void {
+    function run(filename: string): number {
         const test = readInputSync(filename);
         const donut = parse(test);
-        console.log(filename, ans, short(donut, true));
+        return short(donut, true);
     }
-
-    run('input.txt', 490);
+    console.log('Part 2', run('input.txt'));
 }
 
 function main() {

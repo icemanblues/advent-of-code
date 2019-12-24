@@ -1,7 +1,4 @@
-import fs from 'fs';
-
-import { Amp, prog, progAmp, parseIntcode } from '../intcode';
-import { strt, str, tuple } from '../util';
+import { Amp, prog, parseIntcode } from '../intcode';
 
 const dayNum: string = "17";
 const dayTitle: string = "Set and Forget";
@@ -54,21 +51,14 @@ function buildMap(arr: number[]): string[][] {
     return map;
 }
 
-function displayGrid(grid: string[][]): void {
-    for (let y = 0; y < grid.length; y++) {
-        console.log(grid[y].join(''));
-    }
-}
-
 function part1() {
-    console.log('Part 1');
     const intcode = parseIntcode('input.txt');
     const input: number[] = [];
     const output: number[] = [];
     const amp = new Amp('Aft', intcode, input, output);
     prog(amp);
     const grid = buildMap(output);
-    console.log(intersection(grid));
+    console.log('Part 1', intersection(grid));
 }
 
 function toAscii(command: string): number[] {
@@ -78,10 +68,10 @@ function toAscii(command: string): number[] {
 }
 
 function part2() {
-    console.log('Part 2');
     const intcode = parseIntcode('input.txt');
     intcode[0] = 2;
 
+    // solved this by hand (emacs), not using a zip hoffman code compression algo
     const main = toAscii('A,B,A,C,A,B,C,B,C,B');
     const amove = toAscii('L,10,R,8,L,6,R,6');
     const bmove = toAscii('L,8,L,8,R,8');
@@ -92,13 +82,11 @@ function part2() {
     const output: number[] = [];
     const amp = new Amp('Aft', intcode, input, output);
     prog(amp);
-
-    console.log(output[output.length - 1]);
+    console.log('Part 2', output[output.length - 1]);
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
-
     part1();
     part2();
 }

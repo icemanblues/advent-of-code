@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import { getOrDefault, str } from '../util';
 import { Amp, progAmp } from '../intcode';
 
@@ -123,28 +123,24 @@ class Paintbot {
 }
 
 function part1() {
-    console.log('Part 1');
     const lines: number[] = readInputSync('input.txt').map(Number);
     const amp: Amp = new Amp('part1', lines, [], []);
     const paintbot: Paintbot = new Paintbot();
-    console.log(progPaint(amp, paintbot));
+    console.log('Part 1', progPaint(amp, paintbot));
 }
 
 function part2() {
-    console.log('Part 2');
     const lines: number[] = readInputSync('input.txt').map(Number);
     const amp: Amp = new Amp('part2', lines, [], []);
     const paintbot: Paintbot = new Paintbot();
-
     paintbot.paint(1);
     progPaint(amp, paintbot)
-
     paintbot.print();
+    console.log('Part 2', 'JHARBGCU');
 }
 
 function main() {
     console.log(`Day ${dayNum} : ${dayTitle}`);
-
     part1();
     part2();
 }
