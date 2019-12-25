@@ -1,0 +1,18 @@
+east
+take ornament
+south
+take festive hat
+north
+west
+north
+north
+take space heater
+east
+take semiconductor
+west
+south
+south
+west
+north
+north
+west

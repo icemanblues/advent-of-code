@@ -34,4 +34,3 @@ export function toAscii(command: string): number[] {
     r.push(10); // new line
     return r;
 }
-

@@ -18,11 +18,13 @@
   "homepage": "https://github.com/icemanblues/advent-of-code#readme",
   "dependencies": {
     "big-integer": "^1.6.48",
-    "package.json": "^2.0.1"
+    "package.json": "^2.0.1",
+    "readline-sync": "^1.4.10"
   },
   "devDependencies": {
     "@types/big-integer": "0.0.31",
     "@types/node": "^12.12.18",
+    "@types/readline-sync": "^1.4.3",
     "eslint": "^6.7.2",
     "ts-node": "^8.5.2",
     "tslint": "^5.20.1",

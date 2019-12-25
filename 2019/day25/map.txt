@@ -1,0 +1,38 @@
+W-! h-c
+  | |
+  8 s
+  | |
+#-m-X-o-e-#
+      |
+    p-f-*
+        |
+      r-N-k-g
+            |
+            #
+                      
+x = start
+# = deadline (nothing of interest)
+! = security checkpoint
+N = stranded. please supply measurements from fifty stars to recalibrate
+W = win (santa)
+
+s = sand
+h = space heater
+c = semiconductor
+o = ornament
+f = festive hat
+* = asterisk
+k = cake
+r = food ration
+
+g = giant electromagnet (death)
+e = escape pod (death)
+m = molten lava (death)
+8 = infinite loop (death)
+p = photons (death)
+
+Items:
+- ornament
+- space heater
+- festive hat
+- semiconductor
