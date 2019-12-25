@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import { Amp, prog, parseIntcode } from '../intcode';
+import { toAsciiMulti } from '../util';
 
 const dayNum: string = "21";
 const dayTitle: string = "Springdroid Adventure";
@@ -9,17 +10,6 @@ function readSpringscript(filename: string): string[] {
 }
 
 const ASCII_LENGTH = 128; //0-127
-
-function toAscii(springscript: string[]): number[] {
-    const r: number[] = [];
-    springscript.forEach(s => {
-        for (let c of s) {
-            r.push(c.charCodeAt(0));
-        }
-        r.push(10); // new line
-    });
-    return r;
-}
 
 function display(output: number[]): number {
     let score: number = -1;
@@ -41,7 +31,7 @@ function spring(file: string): number {
     const springscript: string[] = readSpringscript(file);
     const intcode = parseIntcode('input.txt');
     const output: number[] = [];
-    const input: number[] = toAscii(springscript);
+    const input: number[] = toAsciiMulti(springscript);
     const amp = new Amp('Day 21', intcode, input, output);
     prog(amp);
     return display(output);

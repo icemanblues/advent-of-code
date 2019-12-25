@@ -1,4 +1,5 @@
 import { Amp, prog, parseIntcode } from '../intcode';
+import { toAscii } from '../util';
 
 const dayNum: string = "17";
 const dayTitle: string = "Set and Forget";
@@ -59,12 +60,6 @@ function part1() {
     prog(amp);
     const grid = buildMap(output);
     console.log('Part 1', intersection(grid));
-}
-
-function toAscii(command: string): number[] {
-    const a = command.split('').map(s => s.charCodeAt(0));
-    a.push(10); // new line
-    return a;
 }
 
 function part2() {
