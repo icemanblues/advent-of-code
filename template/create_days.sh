@@ -1,17 +1,22 @@
 #!/bin/bash
 
-#
 # Sets up an advent-of-code directory structure
-#
+# Must be run in the root directory
 
-# TODO: should prompt or cmd args on which programming language
-# typescript assumed
-# TODO: should prompt or cmd args on which event (2019) and where does it live
-# 2019 assumed, one directory up
+if [ -z "$1" ]; then
+    echo "first param is advent year"
+    exit 1
+fi
 
-for i in {02..25}
+if [ -z "$2" ]; then
+    echo "second param is the programming language"
+    exit 2
+fi
+
+mkdir -p $1
+
+for i in {01..25}
 do
-    mkdir -p day${i}
-    cp dayXX.ts day${i}/day${i}.ts
-    mv day${i} ../2019
+    mkdir -p $1/day${i}
+    cp template/dayXX.$2 $1/day${i}/day${i}.$2
 done
