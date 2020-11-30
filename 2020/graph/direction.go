@@ -19,10 +19,10 @@ const (
 	West
 )
 
-var Directions []Direction = []Direction{North, East, South, West}
+var directions []Direction = []Direction{North, East, South, West}
 
 func CardinalDirections() []Direction {
-	return Directions
+	return directions
 }
 
 func Move(p Point2D, d Direction) Point2D {
@@ -41,8 +41,8 @@ func Move(p Point2D, d Direction) Point2D {
 }
 
 func Adj(p Point2D) []Point2D {
-	adjPoint := make([]Point2D, 0, len(Directions))
-	for _, dir := range Directions {
+	adjPoint := make([]Point2D, 0, len(directions))
+	for _, dir := range directions {
 		a := Move(p, dir)
 		adjPoint = append(adjPoint, a)
 	}
