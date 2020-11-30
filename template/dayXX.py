@@ -1,6 +1,7 @@
 day_num = "XX"
 day_title = "Title"
 
+
 def read_input(filename):
     with open(filename) as f:
         content = [x.strip('\n') for x in f.readlines()]
