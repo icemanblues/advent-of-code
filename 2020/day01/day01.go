@@ -11,50 +11,41 @@ const (
 	dayTitle = "Report Repair"
 )
 
-func part1() {
-	fmt.Println("Part 1")
-	inputs, err := util.ReadIntput("input1.txt")
-	if err != nil {
-		panic(err)
-	}
-
+func find2sum(inputs []int, target int) (int, bool) {
 	nums := make(map[int]struct{})
 	for _, n := range inputs {
 		nums[n] = struct{}{}
 
-		m := 2020 - n
+		m := target - n
 		if _, ok := nums[m]; ok {
-			mult := n * m
-			fmt.Println(mult)
-			break
+			return n * m, true
 		}
 	}
 
+	return 0, false
+}
+
+func find3sum(inputs []int, target int) (int, bool) {
+	for i, n := range inputs {
+		in := append(inputs[:i], inputs[i+1:]...)
+		m, ok := find2sum(in, target-n)
+		if ok {
+			return n * m, true
+		}
+	}
+	return 0, false
+}
+
+func part1() {
+	inputs, _ := util.ReadIntput("input1.txt")
+	a, _ := find2sum(inputs, 2020)
+	fmt.Printf("Part 1: %v\n", a)
 }
 
 func part2() {
-	fmt.Println("Part 2")
 	inputs, _ := util.ReadIntput("input1.txt")
-	nums := make(map[int]struct{})
-
-outer:
-	for i, n := range inputs {
-		nums[n] = struct{}{}
-
-		t := 2020 - n
-		for j, nn := range inputs {
-			if i == j {
-				continue
-			}
-
-			m := t - nn
-			if _, ok := nums[m]; ok {
-				mult := n * m * nn
-				fmt.Println(mult)
-				break outer
-			}
-		}
-	}
+	a, _ := find3sum(inputs, 2020)
+	fmt.Printf("Part 2: %v\n", a)
 }
 
 func main() {
