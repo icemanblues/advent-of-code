@@ -14,8 +14,6 @@
 *.out
 .vscode
 .DS_Store
-# emacs
-*~
 
 ### JAVA
 .idea
