@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DIR=`dirname $0`
+
 if [ -z "$1" ]; then
     echo "first param is the year"
     exit 1
@@ -11,4 +13,4 @@ if [ -z "$2" ]; then
 fi
 
 # cookies.txt needs to contain your session cookie value
-curl -b `cat cookies.txt` https://adventofcode.com/$1/day/$2/input > input.txt
+curl -b `cat ${DIR}/cookies.txt` https://adventofcode.com/$1/day/$2/input > input.txt
