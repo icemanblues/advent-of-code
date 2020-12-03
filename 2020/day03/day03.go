@@ -8,40 +8,20 @@ import (
 
 const (
 	dayNum   = "03"
-	dayTitle = "Title"
+	dayTitle = "Toboggan Trajectory"
 )
-
-func part1() {
-	fmt.Println("Part 1")
-	grid, _ := util.ReadInput("input.txt")
-	x, y := 0, 0
-	r, d := 3, 1
-
-	treeCount := 0
-	for y < len(grid) {
-		wrap := x % len(grid[y])
-		spot := []rune(grid[y])[wrap]
-		if spot == '#' {
-			treeCount++
-		}
-
-		x += r
-		y += d
-	}
-	fmt.Println(treeCount)
-}
 
 type route struct {
 	r, d int
 }
 
-func treeCount(grid []string, r route) int {
+func treeCount(grid [][]rune, r route) int {
 	x, y := 0, 0
 
 	treeCount := 0
 	for y < len(grid) {
 		wrap := x % len(grid[y])
-		spot := []rune(grid[y])[wrap]
+		spot := grid[y][wrap]
 		if spot == '#' {
 			treeCount++
 		}
@@ -52,9 +32,14 @@ func treeCount(grid []string, r route) int {
 	return treeCount
 }
 
+func part1() {
+	grid, _ := util.ReadRuneput("input.txt")
+	r := route{3, 1}
+	fmt.Printf("Part 1: %v\n", treeCount(grid, r))
+}
+
 func part2() {
-	fmt.Println("Part 2")
-	grid, _ := util.ReadInput("input.txt")
+	grid, _ := util.ReadRuneput("input.txt")
 	routes := []route{
 		{1, 1},
 		{3, 1},
@@ -68,7 +53,7 @@ func part2() {
 		tc := treeCount(grid, r)
 		product *= tc
 	}
-	fmt.Println(product)
+	fmt.Printf("Part 2: %v\n", product)
 }
 
 func main() {

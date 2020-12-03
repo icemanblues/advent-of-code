@@ -38,3 +38,19 @@ func ReadIntput(filename string) ([]int, error) {
 
 	return nums, nil
 }
+
+func ReadRuneput(filename string) ([][]rune, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var runes [][]rune
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		runer := []rune(scanner.Text())
+		runes = append(runes, runer)
+	}
+	return runes, nil
+}
