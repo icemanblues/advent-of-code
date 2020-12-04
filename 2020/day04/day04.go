@@ -14,11 +14,13 @@ const (
 	dayTitle = "Title"
 )
 
-func parse(filename string) []map[string]string {
-	lines, _ := util.ReadInput(filename)
-	var passports []map[string]string
+type Passport map[string]string
 
-	pp := make(map[string]string)
+func Parse(filename string) []Passport {
+	lines, _ := util.ReadInput(filename)
+	var passports []Passport
+
+	pp := make(Passport)
 	for _, line := range lines {
 		// empty, so add it and clear it
 		if len(strings.TrimSpace(line)) == 0 {
@@ -33,12 +35,12 @@ func parse(filename string) []map[string]string {
 			pp[keyValue[0]] = keyValue[1]
 		}
 	}
-
+	// EOF, so add it
 	passports = append(passports, pp)
 	return passports
 }
 
-func hasRequiredFIelds(pp map[string]string) bool {
+func HasRequiredFIelds(pp Passport) bool {
 	_, byr_ok := pp["byr"]
 	_, iyr_ok := pp["iyr"]
 	_, eyr_ok := pp["eyr"]
@@ -50,46 +52,23 @@ func hasRequiredFIelds(pp map[string]string) bool {
 	return byr_ok && iyr_ok && eyr_ok && hgt_ok && hcl_ok && ecl_ok && pid_ok /*&& cid_ok*/
 }
 
-func validPassport(pp map[string]string) bool {
-	byr, byr_ok := pp["byr"]
-	if !byr_ok {
+func validYear(pp Passport, field string, min, max int) bool {
+	value, ok := pp[field]
+	if !ok {
 		return false
 	}
-	if len(byr) != 4 {
-		return false
-	}
-	birthYear, err := strconv.Atoi(byr)
+	year, err := strconv.Atoi(value)
 	if err != nil {
 		return false
 	}
-	if birthYear < 1920 || birthYear > 2002 {
+	if year < min || year > max {
 		return false
 	}
 
-	iyr, iyr_ok := pp["iyr"]
-	if !iyr_ok {
-		return false
-	}
-	issueYear, err := strconv.Atoi(iyr)
-	if err != nil {
-		return false
-	}
-	if issueYear < 2010 || issueYear > 2020 {
-		return false
-	}
+	return true
+}
 
-	eyr, eyr_ok := pp["eyr"]
-	if !eyr_ok {
-		return false
-	}
-	expYear, err := strconv.Atoi(eyr)
-	if err != nil {
-		return false
-	}
-	if expYear < 2020 || expYear > 2030 {
-		return false
-	}
-
+func validHeight(pp Passport) bool {
 	hgt, hgt_ok := pp["hgt"]
 	if !hgt_ok {
 		return false
@@ -111,6 +90,10 @@ func validPassport(pp map[string]string) bool {
 		}
 	}
 
+	return true
+}
+
+func validHaircolor(pp Passport) bool {
 	hcl, hcl_ok := pp["hcl"]
 	if !hcl_ok {
 		return false
@@ -118,20 +101,37 @@ func validPassport(pp map[string]string) bool {
 	if len(hcl) != 7 {
 		return false
 	}
-	matched, err := regexp.MatchString("#[0-9a-f]+", hcl)
+	matched, _ := regexp.MatchString("#[0-9a-f]+", hcl)
 	if !matched {
 		return false
 	}
 
+	return true
+}
+
+var valid_ecl = map[string]struct{}{
+	"amb": {},
+	"blu": {},
+	"brn": {},
+	"gry": {},
+	"grn": {},
+	"hzl": {},
+	"oth": {},
+}
+
+func validEyeColor(pp Passport) bool {
 	ecl, ecl_ok := pp["ecl"]
 	if !ecl_ok {
 		return false
 	}
-	good := ecl == "amb" || ecl == "blu" || ecl == "brn" || ecl == "gry" || ecl == "grn" || ecl == "hzl" || ecl == "oth"
-	if !good {
+	if _, ok := valid_ecl[ecl]; !ok {
 		return false
 	}
 
+	return true
+}
+
+func validPassportID(pp Passport) bool {
 	pid, pid_ok := pp["pid"]
 	if !pid_ok {
 		return false
@@ -139,7 +139,7 @@ func validPassport(pp map[string]string) bool {
 	if len(pid) != 9 {
 		return false
 	}
-	_, err = strconv.Atoi(pid)
+	_, err := strconv.Atoi(pid)
 	if err != nil {
 		return false
 	}
@@ -147,10 +147,42 @@ func validPassport(pp map[string]string) bool {
 	return true
 }
 
-func validCount(passports []map[string]string) int {
+func ValidPassport(pp Passport) bool {
+	if !validYear(pp, "byr", 1920, 2002) {
+		return false
+	}
+
+	if !validYear(pp, "iyr", 2010, 2020) {
+		return false
+	}
+
+	if !validYear(pp, "eyr", 2020, 2030) {
+		return false
+	}
+
+	if !validHeight(pp) {
+		return false
+	}
+
+	if !validHaircolor(pp) {
+		return false
+	}
+
+	if !validEyeColor(pp) {
+		return false
+	}
+
+	if !validPassportID(pp) {
+		return false
+	}
+
+	return true
+}
+
+func countValid(passports []Passport, validator func(Passport) bool) int {
 	count := 0
 	for _, pp := range passports {
-		if validPassport(pp) {
+		if validator(pp) {
 			count++
 		}
 	}
@@ -158,14 +190,13 @@ func validCount(passports []map[string]string) int {
 }
 
 func part1() {
-	input := parse("input.txt")
-	fmt.Println(len(input))
-
-	fmt.Printf("Part 1: %v\n", validCount(input))
+	input := Parse("input.txt")
+	fmt.Printf("Part 1: %v\n", countValid(input, HasRequiredFIelds))
 }
 
 func part2() {
-	fmt.Println("Part 2")
+	input := Parse("input.txt")
+	fmt.Printf("Part 2: %v\n", countValid(input, ValidPassport))
 }
 
 func main() {
