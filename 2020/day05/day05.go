@@ -9,53 +9,44 @@ import (
 
 const (
 	dayNum   = "05"
-	dayTitle = "Title"
+	dayTitle = "Binary Boarding"
 )
 
-func seat(line string) (int, int) {
+func parseSeat(line string) int {
 	row, col := -1, -1
-
-	min, max := 0, 127
+	minR, maxR := 0, 127
 	minC, maxC := 0, 7
 
 	for i, r := range line {
-		// row
-		if i == 6 {
+		if i < 6 { // row search
+			rowMid := float64(minR+maxR) / 2.0
 			if r == 'F' {
-				row = min
+				maxR = int(math.Floor(rowMid))
 			} else {
-				row = max
+				minR = int(math.Ceil(rowMid))
 			}
-			continue
-		}
-		if i < 7 {
-			rowMid := float64(min+max) / 2.0
+		} else if i == 6 { // row search is ending
 			if r == 'F' {
-				max = int(math.Floor(rowMid))
+				row = minR
 			} else {
-				min = int(math.Ceil(rowMid))
+				row = maxR
 			}
-			continue
-		}
-
-		if i == 9 {
+		} else if i < 9 { // col search
+			colMid := float64(minC+maxC) / 2.0
+			if r == 'L' {
+				maxC = int(math.Floor(colMid))
+			} else {
+				minC = int(math.Ceil(colMid))
+			}
+		} else { // col search is ending
 			if r == 'L' {
 				col = minC
 			} else {
 				col = maxC
 			}
-			continue
 		}
-
-		colMid := float64(minC+maxC) / 2.0
-		if r == 'L' {
-			maxC = int(math.Floor(colMid))
-		} else {
-			minC = int(math.Ceil(colMid))
-		}
-
 	}
-	return row, col
+	return seatID(row, col)
 }
 
 func seatID(r, c int) int {
@@ -65,9 +56,7 @@ func seatID(r, c int) int {
 func maxSeatID(boardingPass []string) int {
 	max := -1
 	for _, line := range boardingPass {
-		row, col := seat(line)
-		seatID := seatID(row, col)
-
+		seatID := parseSeat(line)
 		if seatID > max {
 			max = seatID
 		}
@@ -75,28 +64,10 @@ func maxSeatID(boardingPass []string) int {
 	return max
 }
 
-func test1(bp string) {
-	r, c := seat(bp)
-	id := seatID(r, c)
-	fmt.Printf("test r: %v c: %v id: %v\n", r, c, id)
-}
-
-type Seat struct {
-	row, col, seatID int
-}
-
 func mySeat(lines []string) int {
-	seats := make([]Seat, 0, len(lines))
-	seatSet := make(map[Seat]struct{})
-	ids := make([]int, 0, len(lines))
 	idSet := make(map[int]struct{})
 	for _, line := range lines {
-		row, col := seat(line)
-		seatID := seatID(row, col)
-		s := Seat{row, col, seatID}
-		seats = append(seats, s)
-		seatSet[s] = struct{}{}
-		ids = append(ids, seatID)
+		seatID := parseSeat(line)
 		idSet[seatID] = struct{}{}
 	}
 
