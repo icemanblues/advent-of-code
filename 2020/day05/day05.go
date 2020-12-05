@@ -17,35 +17,27 @@ func parseSeat(line string) int {
 	minR, maxR := 0, 127
 	minC, maxC := 0, 7
 
-	for i, r := range line {
-		if i < 6 { // row search
-			rowMid := float64(minR+maxR) / 2.0
-			if r == 'F' {
-				maxR = int(math.Floor(rowMid))
-			} else {
-				minR = int(math.Ceil(rowMid))
-			}
-		} else if i == 6 { // row search is ending
-			if r == 'F' {
-				row = minR
-			} else {
-				row = maxR
-			}
-		} else if i < 9 { // col search
-			colMid := float64(minC+maxC) / 2.0
-			if r == 'L' {
-				maxC = int(math.Floor(colMid))
-			} else {
-				minC = int(math.Ceil(colMid))
-			}
-		} else { // col search is ending
-			if r == 'L' {
-				col = minC
-			} else {
-				col = maxC
-			}
+	for _, r := range line {
+		rowMid := float64(minR+maxR) / 2.0
+		colMid := float64(minC+maxC) / 2.0
+		switch r {
+		case 'F':
+			maxR = int(math.Floor(rowMid))
+			row = minR
+		case 'B':
+			minR = int(math.Ceil(rowMid))
+			row = maxR
+		case 'L':
+			maxC = int(math.Floor(colMid))
+			col = minC
+		case 'R':
+			minC = int(math.Ceil(colMid))
+			col = maxC
+		default:
+			fmt.Printf("Unknown rune in boarding pass: %v\n", r)
 		}
 	}
+
 	return seatID(row, col)
 }
 
@@ -74,7 +66,7 @@ func mySeat(lines []string) int {
 	for r := 0; r <= 127; r++ {
 		for c := 0; c <= 7; c++ {
 			id := seatID(r, c)
-			if _, ok := idSet[id]; !ok { // not there
+			if _, ok := idSet[id]; !ok {
 				_, bOk := idSet[id-1]
 				_, aOK := idSet[id+1]
 				if bOk && aOK {
