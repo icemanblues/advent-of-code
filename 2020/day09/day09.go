@@ -7,15 +7,15 @@ import (
 	"github.com/icemanblues/advent-of-code/2020/util"
 )
 
-func parse(filename string, presize int) (map[int]int, []int) {
+func parse(filename string, presize int) (map[int]struct{}, []int) {
 	lines, _ := util.ReadInput(filename)
-	preamble := make(map[int]int)
+	preamble := make(map[int]struct{})
 	message := make([]int, 0)
 
 	for i, line := range lines {
 		num, _ := strconv.Atoi(line)
 		if i < presize {
-			preamble[num]++
+			preamble[num] = struct{}{}
 		}
 		message = append(message, num)
 	}
@@ -23,7 +23,7 @@ func parse(filename string, presize int) (map[int]int, []int) {
 	return preamble, message
 }
 
-func isSumPreamble(preamble map[int]int, target int) bool {
+func isSumPreamble(preamble map[int]struct{}, target int) bool {
 	for k := range preamble {
 		t := target - k
 		if _, ok := preamble[t]; ok && k != t {
@@ -33,19 +33,15 @@ func isSumPreamble(preamble map[int]int, target int) bool {
 	return false
 }
 
-func findBadSum(premable map[int]int, message []int) int {
+func findBadSum(premable map[int]struct{}, message []int) int {
 	for i := len(premable); i < len(message); i++ {
 		target := message[i]
 		if !isSumPreamble(premable, target) {
 			return target
 		}
 
-		remove := message[i-len(premable)]
-		premable[remove]--
-		if premable[remove] <= 0 {
-			delete(premable, remove)
-		}
-		premable[target]++
+		delete(premable, message[i-len(premable)])
+		premable[target] = struct{}{}
 	}
 
 	panic("no bad sum")
@@ -63,7 +59,7 @@ search:
 			}
 			if sum == target {
 				min, max := n, n
-				for k := i; k < j; k++ {
+				for k := i; k <= j; k++ {
 					if msg[k] < min {
 						min = msg[k]
 					}
@@ -85,8 +81,8 @@ func part1() {
 }
 
 func part2() {
-	_, msg := parse("input.txt", 0)
-	fmt.Printf("Part 2: %v\n", findMinMaxForBadSum(msg, 133015568))
+	pre, msg := parse("input.txt", 25)
+	fmt.Printf("Part 2: %v\n", findMinMaxForBadSum(msg, findBadSum(pre, msg)))
 }
 
 func main() {
