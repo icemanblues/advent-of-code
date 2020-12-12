@@ -7,19 +7,12 @@ import (
 	"github.com/icemanblues/advent-of-code/2020/util"
 )
 
-const (
-	dayNum   = "10"
-	dayTitle = "Adapter Array"
-)
-
-func part1() {
+func joltDiff(adapters []int) int {
+	sort.Ints(adapters)
 	curr := 0
-	ints, _ := util.ReadIntput("input.txt")
-	sort.Ints(ints)
-
 	diff1 := 0
 	diff3 := 1
-	for _, jolt := range ints {
+	for _, jolt := range adapters {
 		if jolt-curr == 1 {
 			diff1++
 			curr = jolt
@@ -29,26 +22,31 @@ func part1() {
 			curr = jolt
 		}
 	}
+	return diff1 * diff3
+}
 
-	fmt.Printf("Part 1, %v\n", diff1*diff3)
+func numPaths(adapters []int) int {
+	sort.Ints(adapters)
+	paths := make(map[int]int)
+	paths[0] = 1
+	for _, jolt := range adapters {
+		paths[jolt] = paths[jolt-1] + paths[jolt-2] + paths[jolt-3]
+	}
+	return paths[adapters[len(adapters)-1]]
+}
+
+func part1() {
+	ints, _ := util.ReadIntput("input.txt")
+	fmt.Printf("Part 1, %v\n", joltDiff(ints))
 }
 
 func part2() {
 	ints, _ := util.ReadIntput("input.txt")
-	sort.Ints(ints)
-	paths := make(map[int]int)
-	paths[0] = 1
-
-	for _, jolt := range ints {
-		paths[jolt] = paths[jolt-1] + paths[jolt-2] + paths[jolt-3]
-	}
-
-	fmt.Println(paths)
-	fmt.Printf("Part 2: %v\n", paths[ints[len(ints)-1]])
+	fmt.Printf("Part 2: %v\n", numPaths(ints))
 }
 
 func main() {
-	fmt.Printf("Day %v: %v\n", dayNum, dayTitle)
+	fmt.Println("Day 10: Adapter Array")
 	part1()
 	part2()
 }
