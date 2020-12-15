@@ -2,57 +2,25 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 
 	"github.com/icemanblues/advent-of-code/2020/util"
 )
 
-const (
-	dayNum   = "14"
-	dayTitle = "Docking Data"
-)
-
-func runMask(lines []string) int {
-	var mask string
-	mem := make(map[int]int)
-	for _, line := range lines {
-		leftRight := strings.Split(line, " = ")
-		if leftRight[0] == "mask" {
-			mask = leftRight[1]
-			continue
-		}
-
-		// must be a memory instruction
-		mapIndex := leftRight[0]
-		index, _ := strconv.Atoi(mapIndex[4 : len(mapIndex)-1])
-		value, _ := strconv.Atoi(leftRight[1])
-
-		// apply the mask
-		number := 0
-		for i, r := range mask {
-			bit := 35 - i
-			v := int(math.Pow(2, float64(bit)))
-			switch r {
-			case '1':
-				// force it to 1
-				number += v
-			case '0':
-				// force it to 0, skip
-			case 'X':
-				// copy the bit from the number
-				n := value & v
-				number += n
-			default:
-				panic("mask is messed up")
-			}
-		}
-
-		// update memory
-		mem[index] = number
+func parseLine(line string) (string, string) {
+	leftRight := strings.Split(line, " = ")
+	if leftRight[0] == "mask" {
+		return leftRight[0], leftRight[1]
 	}
 
+	// must be a memory instruction
+	mapIndex := leftRight[0]
+	index := mapIndex[4 : len(mapIndex)-1]
+	return index, leftRight[1]
+}
+
+func memSum(mem map[int]int) int {
 	sum := 0
 	for _, v := range mem {
 		sum += v
@@ -60,76 +28,111 @@ func runMask(lines []string) int {
 	return sum
 }
 
-func runMemMask(lines []string) int {
+func runMask(lines []string) int {
 	var mask string
 	mem := make(map[int]int)
 	for _, line := range lines {
-		leftRight := strings.Split(line, " = ")
-		if leftRight[0] == "mask" {
-			mask = leftRight[1]
+		cmd, arg := parseLine(line)
+		if cmd == "mask" {
+			mask = arg
 			continue
 		}
 
-		// must be a memory instruction
-		mapIndex := leftRight[0]
-		index, _ := strconv.Atoi(mapIndex[4 : len(mapIndex)-1])
-		value, _ := strconv.Atoi(leftRight[1])
-
 		// apply the mask
-		number := value
-		var floating []int
-		iterMem := index
+		addr, _ := strconv.Atoi(cmd)
+		value, _ := strconv.Atoi(arg)
+
+		number := 0
 		for i, r := range mask {
-			bit := 35 - i
-			v := int(math.Pow(2, float64(bit)))
-			memOk := iterMem & v
+			bitIndex := 35 - i
+			bit := 1 << bitIndex
 			switch r {
-			case '1':
-				// force it to 1
-				if memOk == 0 {
-					iterMem += v
-				}
-			case '0':
-				// skip
-			case 'X':
-				floating = append(floating, 35-i)
+			case '1': // force it to 1
+				number += bit
+			case '0': // force it to 0, skip
+			case 'X': // copy the bit from the number
+				number += value & bit
 			default:
 				panic("mask is messed up")
 			}
 		}
 
 		// update memory
-		limit := int(math.Pow(2, float64(len(floating))))
-		for i := 0; i < limit; i++ {
-			addr := iterMem
-			for j, floater := range floating {
+		mem[addr] = number
+	}
+	return memSum(mem)
+}
 
-				v := int(math.Pow(2, float64(j)))
-				valueSet := i & v // do I want to put a 1 or 0
+func applyMaskAddr(mask string, addr int) (int, []int) {
+	var floating []int
+	memAddr := addr
+	for i, r := range mask {
+		bitIndex := 35 - i
+		v := 1 << bitIndex
+		memZero := memAddr&v == 0
 
-				membit := int(math.Pow(2, float64(floater)))
-				memOk := addr & membit // the bit in the value, 0 if not present
-
-				if valueSet == 0 && memOk == 0 { // both are zero, nothing to do
-				}
-				if valueSet != 0 && memOk == 0 { // we want to set 1, but its current 0
-					addr = addr + membit
-				}
-				if valueSet == 0 && memOk != 0 { // we want to set 0, but its current 1
-					addr = addr - membit
-				}
-				if valueSet != 0 && memOk != 0 { // we want to set 1, but its current 1
-				}
+		// TODO: if 1 or 0, it is just an OR with that value
+		switch r {
+		case '1': // force it to 1
+			if memZero {
+				memAddr += v
 			}
-			mem[addr] = number
+		case '0': // skip (take the value that is there)
+		case 'X': // floating
+			floating = append(floating, bitIndex)
+		default:
+			panic("mask is messed up")
 		}
 	}
 
-	sum := 0
-	for _, v := range mem {
-		sum += v
+	return memAddr, floating
+}
+
+func runMemAddrDecoder(lines []string) int {
+	var mask string
+	mem := make(map[int]int)
+	for _, line := range lines {
+		cmd, arg := parseLine(line)
+		if cmd == "mask" {
+			mask = arg
+			continue
+		}
+
+		// must be a memory instruction
+		index, _ := strconv.Atoi(cmd)
+		value, _ := strconv.Atoi(arg)
+
+		// apply the mask to memory address
+		memAddr, floating := applyMaskAddr(mask, index)
+
+		// update memory, apply floating bits (power set)
+		limit := 1 << len(floating)
+		for i := 0; i < limit; i++ {
+			addr := memAddr
+			for j, floater := range floating {
+				bitIndex := 1 << j
+				valueZero := i&bitIndex == 0
+
+				membit := 1 << floater
+				memZero := addr&membit == 0
+
+				// both are zero, nothing to do
+				// we want to set 1, but its current1
+
+				// we want to set 1, but its current 0
+				if !valueZero && memZero {
+					addr = addr + membit
+				}
+				// we want to set 0, but its current 1
+				if valueZero && !memZero {
+					addr = addr - membit
+				}
+			}
+			mem[addr] = value
+		}
 	}
-	return sum
+
+	return memSum(mem)
 }
 
 func part1() {
@@ -139,11 +142,11 @@ func part1() {
 
 func part2() {
 	lines, _ := util.ReadInput("input.txt")
-	fmt.Printf("Part 2: %v\n", runMemMask(lines))
+	fmt.Printf("Part 2: %v\n", runMemAddrDecoder(lines))
 }
 
 func main() {
-	fmt.Printf("Day %v: %v\n", dayNum, dayTitle)
+	fmt.Println("Day 14: Docking Data")
 	part1()
 	part2()
 }
