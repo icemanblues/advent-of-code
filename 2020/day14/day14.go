@@ -65,19 +65,16 @@ func runMask(lines []string) int {
 
 func applyMaskAddr(mask string, addr int) (int, []int) {
 	var floating []int
-	memAddr := addr
+	memAddr := 0
 	for i, r := range mask {
 		bitIndex := 35 - i
-		v := 1 << bitIndex
-		memZero := memAddr&v == 0
+		bit := 1 << bitIndex
 
-		// TODO: if 1 or 0, it is just an OR with that value
 		switch r {
 		case '1': // force it to 1
-			if memZero {
-				memAddr += v
-			}
-		case '0': // skip (take the value that is there)
+			memAddr += bit
+		case '0': // take the value that is there
+			memAddr += addr & bit
 		case 'X': // floating
 			floating = append(floating, bitIndex)
 		default:
