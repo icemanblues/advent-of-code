@@ -9,9 +9,7 @@ const (
 	dayTitle = "Rambunctious Recitation"
 )
 
-var starting = []int{0, 13, 1, 16, 6, 17}
-
-var testOne = []int{0, 3, 6}
+var input = []int{0, 13, 1, 16, 6, 17}
 
 func searchBackwards(numbers []int, num int) int {
 	for i := len(numbers) - 1; i >= 0; i-- {
@@ -23,6 +21,22 @@ func searchBackwards(numbers []int, num int) int {
 }
 
 func MemGame(starting []int, haltTurnNum int) int {
+	for turnNum := len(starting) + 1; turnNum <= haltTurnNum; turnNum++ {
+		lastTurnNum := turnNum - 1
+		lastSpoken := starting[lastTurnNum-1]
+		lastSpokenTurn := searchBackwards(starting[:lastTurnNum-1], lastSpoken)
+
+		age := 0
+		if lastSpokenTurn != 0 {
+			age = lastTurnNum - lastSpokenTurn
+		}
+		starting = append(starting, age)
+	}
+
+	return starting[haltTurnNum-1]
+}
+
+func MemGameImproved(starting []int, haltTurnNum int) int {
 	mem := make(map[int]int)
 	for i, n := range starting {
 		mem[n] = i + 1
@@ -31,51 +45,44 @@ func MemGame(starting []int, haltTurnNum int) int {
 	var deferTurn int = -1
 	var deferSpoken int = -1
 
+	lastSpoken := starting[len(starting)-1]
 	for turnNum := len(starting) + 1; turnNum <= haltTurnNum; turnNum++ {
 		lastTurnNum := turnNum - 1
-		lastSpoken := starting[lastTurnNum-1]
 		lastSpokenTurn := mem[lastSpoken]
-		// lastSpokenTurn := searchBackwards(starting[:lastTurnNum-1], lastSpoken) // part1
-
 		age := 0
 		if lastSpokenTurn != 0 {
 			age = lastTurnNum - lastSpokenTurn
 		}
 		starting = append(starting, age)
 
-		// add it to memory
-		// mem[age] = turnNum // part 1
+		// add it to memory (to defer, then memory)
 		mem[deferSpoken] = deferTurn
 		deferSpoken = age
 		deferTurn = turnNum
+
+		lastSpoken = age
 	}
 
-	return starting[haltTurnNum-1]
+	return lastSpoken
 }
 
 func part1() {
-	fmt.Printf("Part 1: %v\n", MemGame(starting, 2020))
+	fmt.Printf("Part 1: %v\n", MemGame(input, 2020))
 }
 
 func part2() {
-	fmt.Printf("Part 2: %v\n", MemGame(starting, 30000000))
+	fmt.Printf("Part 2: %v\n", MemGameImproved(input, 30000000))
 }
 
 func main() {
 	fmt.Printf("Day %v: %v\n", dayNum, dayTitle)
-	// test1()
-	// test2()
-	// testPart2()
+	testPart1()
 	part1()
+	testPart2()
 	part2()
 }
 
-func test1() {
-	list := []int{0, 3, 6}
-	fmt.Printf("0 example: %v\n", MemGame(list, 10))
-}
-
-func test2() {
+func testPart1() {
 	tests := []struct {
 		numbers  []int
 		expected int
@@ -88,9 +95,15 @@ func test2() {
 		{[]int{3, 1, 2}, 1836},
 	}
 
+	fmt.Println("testPart")
 	for _, test := range tests {
 		actual := MemGame(test.numbers, 2020)
-		fmt.Printf("actual: %v expected: %v input: %v\n", actual, test.expected, test.numbers)
+		if actual == test.expected {
+			fmt.Printf("PASS! actual: %v expected: %v input: %v\n", actual, test.expected, test.numbers)
+		} else {
+			fmt.Printf("FAIL! actual: %v expected: %v input: %v\n", actual, test.expected, test.numbers)
+		}
+
 	}
 }
 
@@ -108,8 +121,9 @@ func testPart2() {
 		{[]int{3, 1, 2}, 362},
 	}
 
+	fmt.Println("testPart2")
 	for _, test := range tests {
-		actual := MemGame(test.numbers, 30000000)
+		actual := MemGameImproved(test.numbers, 30000000)
 		if actual == test.expected {
 			fmt.Printf("Pass! %v == %v for %v \n", actual, test.expected, test.numbers)
 		} else {
