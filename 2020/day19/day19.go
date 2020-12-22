@@ -16,60 +16,63 @@ const (
 type RuleMap map[int]Rule
 
 type Rule interface {
-	apply(string, int, RuleMap) (bool, int)
+	// apply int -> int (in bulk). if the current int passes, and what the next idx is
+	apply(RuleMap, string, []int) []int
 }
 
 type ValueMatch struct {
 	value string
 }
 
-func (vm ValueMatch) apply(msg string, i int, rules RuleMap) (bool, int) {
-	if i >= len(msg) {
-		return false, i
+func (vm ValueMatch) apply(rules RuleMap, msg string, indexes []int) []int {
+	var idx []int
+	for _, i := range indexes {
+		if i < len(msg) && vm.value == msg[i:i+1] {
+			idx = append(idx, i+1)
+		}
 	}
-	return vm.value == msg[i:i+1], i + 1
+	return idx
 }
 
 type Ordered struct {
 	ruleNums []int
 }
 
-func (o Ordered) apply(msg string, i int, rules RuleMap) (bool, int) {
-	/*
-		if i >= len(msg) {
-			return false, i
-		}
-	*/
+func (o Ordered) apply(rules RuleMap, msg string, indexes []int) []int {
+	var idx []int
 
-	valid := true
-	for _, ruleNum := range o.ruleNums {
-		rule := rules[ruleNum]
-		b, j := rule.apply(msg, i, rules)
-		if !b {
-			return false, j
+	for _, i := range indexes {
+		search := []int{i}
+		for _, ruleNum := range o.ruleNums {
+			rule := rules[ruleNum]
+			bidx := rule.apply(rules, msg, search)
+			search = nil
+			for _, b := range bidx {
+				search = append(search, b)
+			}
 		}
-		i = j
-		valid = valid && b
+		// we finished running all of the rules
+		for _, sidx := range search {
+			idx = append(idx, sidx)
+		}
 	}
-	return valid, i
+	return idx
 }
 
 type Or struct {
 	left, right Ordered
 }
 
-func (or Or) apply(msg string, i int, rules RuleMap) (bool, int) {
-	/*
-		if i >= len(msg) {
-			return false, i
-		}
-	*/
+func (or Or) apply(rules RuleMap, msg string, indexes []int) []int {
+	var idx []int
 
-	if b, j := or.left.apply(msg, i, rules); b {
-		return b, j
-	}
+	lidx := or.left.apply(rules, msg, indexes)
+	idx = append(idx, lidx...)
 
-	return or.right.apply(msg, i, rules)
+	ridx := or.right.apply(rules, msg, indexes)
+	idx = append(idx, ridx...)
+
+	return idx
 }
 
 func strings2ints(rulers []string) []int {
@@ -132,10 +135,11 @@ func parse(lines []string) (RuleMap, []string) {
 
 func match(ruleMap RuleMap, msgs []string) int {
 	count := 0
+	start := []int{0}
 	for _, msg := range msgs {
-		if ok, i := ruleMap[0].apply(msg, 0, ruleMap); ok {
-			if i == len(msg) {
-				fmt.Println(msg)
+		idx := ruleMap[0].apply(ruleMap, msg, start)
+		for _, j := range idx {
+			if j == len(msg) {
 				count++
 			}
 		}
@@ -144,60 +148,26 @@ func match(ruleMap RuleMap, msgs []string) int {
 	return count
 }
 
+func updateRules(rules RuleMap) {
+	parseRule("8: 42 | 42 8", rules)
+	parseRule("11: 42 31 | 42 11 31", rules)
+}
+
 func part1() {
 	lines, _ := util.ReadInput("input.txt")
 	rules, msgs := parse(lines)
 	fmt.Printf("Part 1: %v\n", match(rules, msgs))
 }
 
-var test2Pass []string = []string{
-	"bbabbbbaabaabba",
-	"babbbbaabbbbbabbbbbbaabaaabaaa",
-	"aaabbbbbbaaaabaababaabababbabaaabbababababaaa",
-	"bbbbbbbaaaabbbbaaabbabaaa",
-	"bbbababbbbaaaaaaaabbababaaababaabab",
-	"ababaaaaaabaaab",
-	"ababaaaaabbbaba",
-	"baabbaaaabbaaaababbaababb",
-	"abbbbabbbbaaaababbbbbbaaaababb",
-	"aaaaabbaabaaaaababaa",
-	"aaaabbaabbaaaaaaabbbabbbaaabbaabaaa",
-	"aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba",
-}
-
-// 176 too low
-// 352 too high
 func part2() {
-	lines, _ := util.ReadInput("test2.txt")
-	rules, _ := parse(lines)
-
-	parseRule("8: 42 | 42 8", rules)
-	parseRule("11: 42 31 | 42 11 31", rules)
-
-	fmt.Printf("rule 8: %v\n", rules[8])
-	fmt.Printf("rule 11: %v\n", rules[11])
-	fmt.Printf("rule 42: %v\n", rules[42])
-	fmt.Printf("rule 31: %v\n", rules[31])
-
-	count := 0
-	for i, m := range test2Pass {
-		b, j := rules[0].apply(m, 0, rules)
-		fmt.Printf("%v: %v j=%v len=%v %v\n", i, b, j, len(m), m)
-		if b {
-			count++
-		}
-	}
-	fmt.Println(count)
-
-	for k, v := range rules {
-		fmt.Printf("rule %v: %v\n", k, v)
-	}
-
-	//fmt.Printf("Part 2: %v\n", match(rules, msgs))
+	lines, _ := util.ReadInput("input.txt")
+	rules, msgs := parse(lines)
+	updateRules(rules)
+	fmt.Printf("Part 2: %v\n", match(rules, msgs))
 }
 
 func main() {
 	fmt.Printf("Day %v: %v\n", dayNum, dayTitle)
-	//part1()
+	part1()
 	part2()
 }
