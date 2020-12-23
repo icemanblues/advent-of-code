@@ -13,9 +13,10 @@ const (
 )
 
 const input string = "974618352"
+const test1 string = "389125467"
 
 func ParseCups(s string) []int {
-	var cups []int
+	cups := make([]int, 0, len(s))
 	for _, r := range s {
 		cups = append(cups, util.MustAtoi(string(r)))
 	}
@@ -25,6 +26,7 @@ func ParseCups(s string) []int {
 func PlayGame(cups []int, numMoves int) []int {
 	l := len(cups)
 	currIdx := 0
+	curr := cups[currIdx]
 	min, max := cups[0], cups[0]
 	for _, c := range cups {
 		if c > max {
@@ -36,20 +38,19 @@ func PlayGame(cups []int, numMoves int) []int {
 	}
 
 	for m := 1; m <= numMoves; m++ {
-		curr := cups[currIdx]
-		idx1 := (currIdx + 1) % l
-		idx2 := (currIdx + 2) % l
-		idx3 := (currIdx + 3) % l
-		cup1 := cups[idx1]
-		cup2 := cups[idx2]
-		cup3 := cups[idx3]
+		// find pickups
+		pickups := make([]int, 0, 3)
+		for i := 1; i <= 3; i++ {
+			idx := (currIdx + i) % l
+			pickups = append(pickups, cups[idx])
+		}
 
 		// find the label
 		label := curr - 1
 		if label < min {
 			label = max
 		}
-		for label == cup1 || label == cup2 || label == cup3 {
+		for label == pickups[0] || label == pickups[1] || label == pickups[2] {
 			label--
 			if label < min {
 				label = max
@@ -57,22 +58,12 @@ func PlayGame(cups []int, numMoves int) []int {
 		}
 
 		// remove the pick ups
-		for i, c := range cups {
-			if c == cup1 {
-				cups = append(cups[:i], cups[i+1:]...)
-				break
-			}
-		}
-		for i, c := range cups {
-			if c == cup2 {
-				cups = append(cups[:i], cups[i+1:]...)
-				break
-			}
-		}
-		for i, c := range cups {
-			if c == cup3 {
-				cups = append(cups[:i], cups[i+1:]...)
-				break
+		for _, p := range pickups {
+			for i, c := range cups {
+				if c == p {
+					cups = append(cups[:i], cups[i+1:]...)
+					break
+				}
 			}
 		}
 
@@ -89,17 +80,18 @@ func PlayGame(cups []int, numMoves int) []int {
 		newCups := make([]int, 0, l)
 		insertPoint := (labelIdx + 1) % l
 		newCups = append(newCups, cups[:insertPoint]...)
-		newCups = append(newCups, cup1, cup2, cup3)
+		newCups = append(newCups, pickups...)
 		newCups = append(newCups, cups[insertPoint:]...)
 		cups = newCups
 
-		// increment curr and currIdx
+		// increment currIdx and curr
 		for i, c := range cups {
 			if c == curr {
 				currIdx = i
 			}
 		}
 		currIdx = (currIdx + 1) % l
+		curr = cups[currIdx]
 	}
 
 	return cups
@@ -127,24 +119,94 @@ func score(cups []int) int {
 	return score
 }
 
-func printCups(move int, cups []int, currIdx int, pickups []int, dest int) {
-	fmt.Printf("--Move %v --\n", move)
-	fmt.Printf("cups: ")
-	for i, c := range cups {
-		if i == currIdx {
-			fmt.Printf("(%v)", c)
-		} else {
-			fmt.Printf("%v", c)
+type BigCup struct {
+	Label int
+	Next  *BigCup
+}
+
+type BigCupGame struct {
+	Head               *BigCup
+	Lookup             map[int]*BigCup
+	MinLabel, MaxLabel int
+}
+
+func ParseBigCups(s string, size int) BigCupGame {
+	cupIndexMap := make(map[int]*BigCup)
+	max := -1
+	var head *BigCup = nil
+	var curr *BigCup = nil
+	for i, r := range s {
+		n := util.MustAtoi(string(r))
+		if n > max {
+			max = n
 		}
-		if i != len(cups)-1 {
-			fmt.Printf(" ")
+		bigCup := &BigCup{n, nil}
+		cupIndexMap[n] = bigCup
+
+		if i == 0 {
+			head = bigCup
 		} else {
-			fmt.Printf("\n")
+			curr.Next = bigCup
+		}
+		curr = bigCup
+	}
+
+	for i := len(s); i < size; i++ {
+		max++
+		bigCup := &BigCup{max, nil}
+		cupIndexMap[max] = bigCup
+		curr.Next = bigCup
+		curr = bigCup
+	}
+	curr.Next = head
+	return BigCupGame{head, cupIndexMap, 1, max}
+}
+
+func PlayBigGame(game BigCupGame, numMoves int) BigCupGame {
+	current := game.Head
+
+	for m := 1; m <= numMoves; m++ {
+		// find the pick ups
+		cup1 := current.Next
+		cup2 := cup1.Next
+		cup3 := cup2.Next
+
+		// remove them from the linked list
+		current.Next = cup3.Next
+
+		// find the destination
+		destLabel := current.Label - 1
+		if destLabel < game.MinLabel {
+			destLabel = game.MaxLabel
+		}
+		for destLabel == cup1.Label || destLabel == cup2.Label || destLabel == cup3.Label {
+			destLabel--
+			if destLabel < game.MinLabel {
+				destLabel = game.MaxLabel
+			}
+		}
+
+		// insert at the destination
+		destCup := game.Lookup[destLabel]
+		keep := destCup.Next
+		destCup.Next = cup1
+		cup3.Next = keep
+
+		// determine the next current cup
+		current = current.Next
+	}
+	return game
+}
+
+func scoreBig(game BigCupGame) int {
+	for label, bigcup := range game.Lookup {
+		if label == 1 {
+			one := bigcup.Next
+			two := one.Next
+			return one.Label * two.Label
 		}
 	}
-	fmt.Printf("pick up: %v\n", pickups)
-	fmt.Printf("destination: %v\n", dest)
-	fmt.Println()
+	panic("There is no 1")
 }
 
 func part1() {
@@ -154,9 +216,13 @@ func part1() {
 	fmt.Printf("Part 1: %v\n", labels)
 }
 
-// 75893264
 func part2() {
-	fmt.Printf("Part 2: %v\n", 2)
+	numMoves := 10000000
+	numCups := 1000000
+	cups := ParseBigCups(input, numCups)
+	cups = PlayBigGame(cups, numMoves)
+	labels := scoreBig(cups)
+	fmt.Printf("Part 2: %v\n", labels)
 }
 
 func main() {
