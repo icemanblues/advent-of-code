@@ -10,7 +10,7 @@ import (
 
 const (
 	dayNum   = "22"
-	dayTitle = "Title"
+	dayTitle = "Crab Combat"
 )
 
 func parseCards(lines []string) ([]int, []int) {
@@ -150,29 +150,9 @@ func part1() {
 	fmt.Printf("Part 1: %v\n", round(one, two))
 }
 
-func test1() {
-	lines, _ := util.ReadInput("test1.txt")
-	one, two := parseCards(lines)
-	fmt.Println(one)
-	fmt.Println(two)
-	_, s := recursive(one, two)
-	fmt.Printf("Test 1: %v\n", s)
-}
-
-func test2() {
-	lines, _ := util.ReadInput("test2.txt")
-	one, two := parseCards(lines)
-	fmt.Println(one)
-	fmt.Println(two)
-	_, s := recursive(one, two)
-	fmt.Printf("Test 2: %v\n", s)
-}
-
 func part2() {
 	lines, _ := util.ReadInput("input.txt")
 	one, two := parseCards(lines)
-	fmt.Println(one)
-	fmt.Println(two)
 	_, s := recursive(one, two)
 	fmt.Printf("Part 2: %v\n", s)
 }
@@ -180,7 +160,5 @@ func part2() {
 func main() {
 	fmt.Printf("Day %v: %v\n", dayNum, dayTitle)
 	part1()
-	test1()
-	test2()
 	part2()
 }
