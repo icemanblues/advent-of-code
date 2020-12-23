@@ -54,3 +54,11 @@ func ReadRuneput(filename string) ([][]rune, error) {
 	}
 	return runes, nil
 }
+
+func MustAtoi(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		panic(err)
+	}
+	return n
+}
