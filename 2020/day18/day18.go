@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/icemanblues/advent-of-code/2020/util"
 )
@@ -12,14 +10,6 @@ const (
 	dayNum   = "18"
 	dayTitle = "Operation Order"
 )
-
-func MustAtoi(s string) int {
-	n, err := strconv.Atoi(s)
-	if err != nil {
-		panic(err)
-	}
-	return n
-}
 
 func operate(op rune, a, b int) int {
 	switch op {
@@ -32,15 +22,16 @@ func operate(op rune, a, b int) int {
 	panic("unknown operator: " + string(op))
 }
 
-func EvaluateLine(line string, i int) (int, int) {
+// Eval evaluates the math expression from left to right. No operator precedence
+func Eval(line string, i int, look bool) (int, int) {
 	runes := []rune(line)
 	var e int
 
 	if runes[i] == '(' {
-		e, i = EvaluateLine(line, i+1)
+		e, i = Eval(line, i+1, look)
 
 	} else {
-		e = MustAtoi(string(runes[i]))
+		e = util.MustAtoi(string(runes[i]))
 	}
 	i++
 
@@ -50,7 +41,7 @@ func EvaluateLine(line string, i int) (int, int) {
 
 		switch r {
 		case '(':
-			exp, j := EvaluateLine(line, i+1)
+			exp, j := Eval(line, i+1, look)
 			e = operate(op, e, exp)
 			i = j
 		case ')':
@@ -61,64 +52,162 @@ func EvaluateLine(line string, i int) (int, int) {
 			op = r
 		case ' ':
 		default: // number
-			right := MustAtoi(string(r))
-			e = operate(op, e, right)
+			// do a look ahead if current op is multiply and the next op is +
+			// * 5 + 8
+			//   ^^^
+			if look && op == '*' {
+				// need to find the next operator. parens dont count
+
+			}
+
+			if look && op == '*' && i+2 < len(runes) && runes[i+2] == '+' {
+				exp, j := Eval(line, i, look)
+				e = operate(op, e, exp)
+				i = j
+			} else {
+				right := util.MustAtoi(string(r))
+				e = operate(op, e, right)
+			}
 		}
+
 		i++
 	}
 
 	return e, i
 }
 
-type Expression interface {
-	Evaluate() int
+type Stack struct {
+	s []rune
 }
 
-type Value struct {
-	v int
+func (s *Stack) Len() int {
+	return len(s.s)
 }
 
-func (value Value) Evaluate() int {
-	return value.v
+func (s *Stack) IsEmpty() bool {
+	return len(s.s) == 0
 }
 
-type BinOp struct {
-	op    rune
-	left  Expression
-	right Expression
+func (s *Stack) Push(r rune) {
+	s.s = append(s.s, r)
 }
 
-func (b BinOp) Evaluate() int {
-	return operate(b.op, b.left.Evaluate(), b.right.Evaluate())
+func (s *Stack) Pop() rune {
+	if !s.IsEmpty() {
+		r := s.s[len(s.s)-1]
+		s.s = s.s[:len(s.s)-1]
+		return r
+	}
+	panic("Cannot pop on an empty stack")
 }
 
-func Express(line string) int {
-	newline := strings.ReplaceAll(line, " * ", ") * (")
-	newline = "(" + newline + ")"
-	fmt.Println(line)
-	fmt.Println(newline)
-	e, _ := EvaluateLine(newline, 0)
-	return e
+func (s *Stack) Peek() rune {
+	if !s.IsEmpty() {
+		return s.s[len(s.s)-1]
+	}
+	panic("Cannot peek on an empty stack")
+}
+
+// EvalPrecedence evaluates the mathematical expression using Shunting Yard Algorithm
+func EvalPrecedence(line string) []rune {
+	numbers := []rune{}
+	operators := Stack{}
+	for _, r := range line {
+		switch r {
+		case '+':
+			operators.Push(r)
+		case '*':
+			// this is lower precedence, so we need to peek to see if the previous operator was a +
+			if !operators.IsEmpty() && operators.Peek() == '+' {
+				// pop all operators and put them into the numbers (output)
+				// and put back the left parens
+				for !operators.IsEmpty() {
+					op := operators.Pop()
+					if op == '(' {
+						operators.Push('(')
+						break
+					}
+					numbers = append(numbers, op)
+				}
+			}
+			operators.Push(r)
+		case ' ':
+			// skip
+		case '(':
+			operators.Push(r)
+		case ')':
+			// pop all operators and put them into the numbers (output) until you see the open paren
+			for !operators.IsEmpty() {
+				o := operators.Pop()
+				if o == '(' {
+					break
+				}
+				numbers = append(numbers, o)
+			}
+		default: // number
+			numbers = append(numbers, r)
+		}
+	}
+
+	// pop all operators to finish
+	for !operators.IsEmpty() {
+		op := operators.Pop()
+		if op == '(' {
+			fmt.Printf("This op %v shouldn't be here. %v\n", op, line)
+		}
+		numbers = append(numbers, op)
+	}
+
+	return numbers
+}
+
+func PostFixEval(expression []rune) int {
+	var numbers []int
+	for _, e := range expression {
+		switch e {
+		case '+':
+			one := numbers[len(numbers)-1]
+			two := numbers[len(numbers)-2]
+			numbers = numbers[:len(numbers)-2]
+			result := one + two
+			numbers = append(numbers, result)
+		case '*':
+			one := numbers[len(numbers)-1]
+			two := numbers[len(numbers)-2]
+			numbers = numbers[:len(numbers)-2]
+			result := one * two
+			numbers = append(numbers, result)
+		default: // number
+			n := util.MustAtoi(string(e))
+			numbers = append(numbers, n)
+		}
+	}
+	return numbers[0]
+}
+
+func SumExpressions(expressions []string, look bool) int {
+	sum := 0
+	for _, exp := range expressions {
+		if look {
+			postfix := EvalPrecedence(exp)
+			n := PostFixEval(postfix)
+			sum += n
+		} else {
+			n, _ := Eval(exp, 0, false)
+			sum += n
+		}
+	}
+	return sum
 }
 
 func part1() {
-	sum := 0
 	lines, _ := util.ReadInput("input.txt")
-	for _, line := range lines {
-		n, _ := EvaluateLine(line, 0)
-		sum += n
-	}
-	fmt.Printf("Part 1: %v\n", sum)
+	fmt.Printf("Part 1: %v\n", SumExpressions(lines, false))
 }
 
 func part2() {
-	sum := 0
 	lines, _ := util.ReadInput("input.txt")
-	for _, line := range lines {
-		n, _ := EvaluateLine(line, 0)
-		sum += n
-	}
-	fmt.Printf("Part 2: %v\n", sum)
+	fmt.Printf("Part 2: %v\n", SumExpressions(lines, true))
 }
 
 func main() {
