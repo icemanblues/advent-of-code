@@ -9,7 +9,7 @@ import (
 
 const (
 	dayNum   = "23"
-	dayTitle = "Title"
+	dayTitle = "Crab Cups"
 )
 
 const input string = "974618352"
