@@ -19,27 +19,13 @@ type Tile struct {
 	Grid [][]rune
 }
 
-// Print the title to standard out
-func (t Tile) Print() {
-	fmt.Printf("ID: %v\n", t.ID)
-	for j := 0; j < len(t.Grid); j++ {
-		for i := 0; i < len(t.Grid[j]); i++ {
-			fmt.Printf("%c", t.Grid[j][i])
-		}
-		fmt.Printf("\n")
-	}
-}
-
-// ParseTile parsing a string slice into tile structs
 func ParseTile(lines []string) []Tile {
 	var tiles []Tile
-
 	var tile Tile
 	for _, line := range lines {
 		if strings.HasPrefix(line, "Tile") {
 			line = strings.ReplaceAll(line, "Tile ", "")
 			line = strings.ReplaceAll(line, ":", "")
-			//logDebug("tileID to parse: %v\n", line)
 			id, _ := strconv.Atoi(line)
 			tile.ID = id
 		} else if len(line) == 0 {
@@ -53,7 +39,6 @@ func ParseTile(lines []string) []Tile {
 	return tiles
 }
 
-// newGrid create a new 2d rune slice that is square
 func newGrid(n int) [][]rune {
 	newGrid := make([][]rune, n, n)
 	for i := 0; i < n; i++ {
@@ -62,7 +47,6 @@ func newGrid(n int) [][]rune {
 	return newGrid
 }
 
-// rotate90 For the given tile, a new tile is returned that is rotated 90 degrees counter clockwise
 func rotate90(tile Tile) Tile {
 	n := len(tile.Grid)
 	rot := newGrid(n)
@@ -75,7 +59,6 @@ func rotate90(tile Tile) Tile {
 	return Tile{tile.ID, rot}
 }
 
-// allRotations this will perform 3 rotations on the given title, resulting in 4 new tiles
 func allRotations(tile Tile) []Tile {
 	var rotations []Tile
 	rot := tile
@@ -86,8 +69,7 @@ func allRotations(tile Tile) []Tile {
 	return rotations
 }
 
-// flipHorz For the given tile, a new tile is returned that is flipped horizontally
-func flipHorz(tile Tile) Tile {
+func flip(tile Tile) Tile {
 	n := len(tile.Grid)
 	flip := newGrid(n)
 	for j := 0; j < len(tile.Grid); j++ {
@@ -98,32 +80,66 @@ func flipHorz(tile Tile) Tile {
 	return Tile{tile.ID, flip}
 }
 
-// flipVert For the given tile, a new tile is returned that is flipped vertically
-func flipVert(tile Tile) Tile {
-	n := len(tile.Grid)
-	flip := newGrid(n)
-	for j := 0; j < len(tile.Grid); j++ {
-		for i := 0; i < len(tile.Grid[j]); i++ {
-			flip[i][j] = tile.Grid[n-1-i][j]
-		}
-	}
-	return Tile{tile.ID, flip}
-}
-
-// orientations for the given tile,
 func orientations(tile Tile) []Tile {
 	var orientations []Tile
 	orientations = append(orientations, allRotations(tile)...)
-	orientations = append(orientations, allRotations(flipHorz(tile))...)
-	orientations = append(orientations, allRotations(flipVert(tile))...)
-	// orientations = append(orientations, flipHorz(tile))
-	// orientations = append(orientations, flipVert(tile))
-	//logDebug("total orientations: %v\n", len(orientations))
+	orientations = append(orientations, allRotations(flip(tile))...)
 	return orientations
 }
 
-// hasTileID checks to see if tile's ID exists amongst the tiles in tiles
-func hasTileID(tiles []Tile, tile Tile) bool {
+func checkTopToBot(botTile Tile, topTile Tile) bool {
+	col := len(topTile.Grid) - 1
+	for i := 0; i < len(topTile.Grid[col]); i++ {
+		if topTile.Grid[col][i] != botTile.Grid[0][i] {
+			return false
+		}
+	}
+	return true
+}
+
+func checkLeftToRight(rightTile Tile, leftTile Tile) bool {
+	row := len(leftTile.Grid) - 1
+	for j := 0; j < len(leftTile.Grid); j++ {
+		if leftTile.Grid[j][row] != rightTile.Grid[j][0] {
+			return false
+		}
+	}
+	return true
+}
+
+func checkJigsaw(sol []Tile, tile Tile, n int) bool {
+	l := len(sol)
+	if l == 0 {
+		return true
+	}
+	if l%n != 0 {
+		other := sol[l-1]
+		if !checkLeftToRight(tile, other) {
+			return false
+		}
+	}
+	if l >= n {
+		other := sol[l-n]
+		if !checkTopToBot(tile, other) {
+			return false
+		}
+	}
+	return true
+}
+
+func SolveCorners(filename string) int {
+	lines, _ := util.ReadInput(filename)
+	tiles := ParseTile(lines)
+	corners := FindConnections(tiles)[2]
+
+	prod := 1
+	for _, c := range corners {
+		prod *= c.ID
+	}
+	return prod
+}
+
+func hasTile(tiles []Tile, tile Tile) bool {
 	for _, t := range tiles {
 		if t.ID == tile.ID {
 			return true
@@ -132,91 +148,38 @@ func hasTileID(tiles []Tile, tile Tile) bool {
 	return false
 }
 
-func checkTopToBot(botTile Tile, topTile Tile) bool {
-	otherRow := len(topTile.Grid) - 1
-	tileRow := 0
-	for j := 0; j < len(topTile.Grid); j++ {
-		o := topTile.Grid[otherRow][j]
-		t := botTile.Grid[tileRow][j]
-		//logDebug("other: %c tile: %c bool: %v \n", o, t, o == t)
-		if o != t {
-			return false
-		}
-	}
-	return true
-}
-
-func checkLeftToRight(rightTile Tile, leftTile Tile) bool {
-	otherCol := len(leftTile.Grid) - 1
-	tileCol := 0
-	for i := 0; i < len(leftTile.Grid); i++ {
-		t := rightTile.Grid[i][tileCol]
-		o := leftTile.Grid[i][otherCol]
-		//logDebug("other: %c tile: %c bool: %v \n", o, t, o == t)
-		if o != t {
-			return false
-		}
-	}
-	return true
-}
-
-// checkBorder true if title can be added to solution. In that its border matches the tiles before it (left and up)
-func checkBorder(sol []Tile, tile Tile, n int) bool {
+func search(tiles []Tile, sol []Tile, n int, connCountMap map[int][]Tile) []Tile {
 	l := len(sol)
-	if l == 0 {
-		return true
-	}
-
-	if l%n != 0 {
-		//logDebug("comparing left to right: %v to %v\n", l, l-1)
-		other := sol[l-1]
-		if !checkLeftToRight(other, tile) {
-			return false
-		}
-	}
-
-	if l >= n {
-		//logDebug("comparing top to bottom: %v to %v\n", l, l-n)
-		other := sol[l-n]
-		if !checkTopToBot(tile, other) {
-			return false
-		}
-	}
-
-	return true
-}
-
-func search(tiles []Tile, sol []Tile, n int) []Tile {
-	//logDebug("solution so far: %v\n", len(sol))
-	if len(tiles) == 0 {
+	if l == len(tiles) {
 		return sol
 	}
 
-	for tileIdx, tile := range tiles {
-		// need to check to see if the tile already exists in the solution
-		/*
-			if hasTileID(sol, tile) {
-				continue
-			}
-		*/
+	// Given where we are in the solution, we can greatly reduce the search space
+	var searchTiles []Tile
+	if l == 0 || l == n-1 || l == len(tiles)-1 || l == len(tiles)-n { // corners
+		searchTiles = connCountMap[2]
+	} else if l%n == 0 || l%n == n-1 { // sides
+		searchTiles = connCountMap[3]
+	} else if l < n || l >= n*(n-1) { //top and bot
+		searchTiles = connCountMap[3]
+	} else { // must be in the middle
+		searchTiles = connCountMap[4]
+	}
 
+	for _, tile := range searchTiles {
+		// skip if the tile is already in the solution
+		if hasTile(sol, tile) {
+			continue
+		}
 		for _, ori := range orientations(tile) {
-			// check if ori can be added to solutions
-			if !checkBorder(sol, ori, n) {
+			if !checkJigsaw(sol, ori, n) {
 				continue
 			}
 
-			// add it to the solution
 			sol = append(sol, ori)
-			// remove it from the possible choice of tiles
-			var iterTiles []Tile
-			iterTiles = append(iterTiles, tiles[:tileIdx]...)
-			iterTiles = append(iterTiles, tiles[tileIdx+1:]...)
-			// recurse to continue the search, on a smaller problem space
-			ans := search(iterTiles, sol, n)
+			ans := search(tiles, sol, n, connCountMap)
 			if ans != nil {
 				return ans
-				//printSolution(ans, n)
 			}
 			sol = sol[:len(sol)-1]
 		}
@@ -225,123 +188,144 @@ func search(tiles []Tile, sol []Tile, n int) []Tile {
 	return nil
 }
 
-func prodCorners(tiles []Tile, n int) int {
-	if len(tiles) == 0 {
-		return -1
-	}
-
-	corners := []int{0, n - 1, len(tiles) - 1, len(tiles) - n}
-	prod := 1
-	for _, idx := range corners {
-		prod *= tiles[idx].ID
-	}
-	return prod
-}
-
-func printSolution(tiles []Tile, n int) {
-	for i, tile := range tiles {
-		if i%n == 0 {
-			fmt.Printf("\n")
-		}
-		fmt.Printf("%v ", tile.ID)
-	}
-	fmt.Printf("\n")
-}
-
-func printTileIds(tiles []Tile) {
-	for i, t := range tiles {
-		logDebug("%v: %v\n", i, t.ID)
-	}
-}
-
-// FindCorners will return the 4 corners
-func FindCorners(tiles []Tile) []Tile {
-	// Tiles at the edge of the image also have this border, but the outermost edges won't line up with any other tiles.
-	var corners []Tile
+func FindConnections(tiles []Tile) map[int][]Tile {
+	connCountsToTiles := make(map[int][]Tile)
 	for _, tile := range tiles {
 		count := 0
 		for _, rot := range allRotations(tile) {
 		tileSearch:
 			for _, other := range tiles {
-				// no need to compare to yourself
-				if tile.ID == other.ID {
+				if tile.ID == other.ID { // no need to compare to yourself
 					continue
 				}
 
 				for _, otherOri := range orientations(other) {
 					if checkLeftToRight(rot, otherOri) {
-						//logDebug("tile %v matches with other %v\n", tile.ID, other.ID)
 						count++
 						continue tileSearch
 					}
 				}
 			}
 		}
-		// we tried all other tiles against this one
-		// should equal the number of matching sides
-		//logDebug("tile %v count: %v\n", tile.ID, count)
-		if count == 2 {
-			corners = append(corners, tile)
+		connCountsToTiles[count] = append(connCountsToTiles[count], tile)
+	}
+	return connCountsToTiles
+}
+
+func countHash(tile Tile) int {
+	count := 0
+	for j := 0; j < len(tile.Grid); j++ {
+		for i := 0; i < len(tile.Grid[j]); i++ {
+			if '#' == tile.Grid[j][i] {
+				count++
+			}
 		}
 	}
-	return corners
+	return count
 }
 
-func SolveCorners(filename string) int {
-	lines, _ := util.ReadInput(filename)
-	tiles := ParseTile(lines)
-	n := int(math.Sqrt(float64(len(tiles))))
-
-	logDebug("number of tiles: %v %vx%v\n", len(tiles), n, n)
-	corners := FindCorners(tiles)
-
-	if l := len(corners); l != 4 {
-		logDebug("Incorrect number of corners detected: %v\n", l)
-		return -1
+func removeBorder(tile Tile) Tile {
+	newGrid := tile.Grid[1 : len(tile.Grid)-1]
+	for j := 0; j < len(newGrid); j++ {
+		newGrid[j] = newGrid[j][1 : len(newGrid[j])-1]
 	}
-
-	prod := 1
-	for _, c := range corners {
-		prod *= c.ID
-		//logDebug("%v: tile %v prod %v\n", i, c.ID, prod)
-	}
-	return prod
+	return Tile{tile.ID, newGrid}
 }
 
-func SolveBorders(filename string) int {
+func stitchImage(tiles []Tile, n int) Tile {
+	var newGrid [][]rune
+	for k := 0; k < len(tiles); k += n { // k is the start in tiles
+		for j := 0; j < len(tiles[k].Grid); j++ {
+			var newRow []rune
+			for l := 0; l < n; l++ { // l is the offset within i..i+n
+				tile := tiles[k+l]
+				newRow = append(newRow, tile.Grid[j]...)
+			}
+			newGrid = append(newGrid, newRow)
+		}
+	}
+
+	return Tile{20, newGrid}
+}
+
+type Coord struct {
+	x, y int
+}
+
+/*
+                  #
+#    ##    ##    ###
+ #  #  #  #  #  #
+*/
+var dragon = []Coord{
+	{18, 0},
+	{0, 1},
+	{5, 1},
+	{6, 1},
+	{11, 1},
+	{12, 1},
+	{17, 1},
+	{18, 1},
+	{19, 1},
+	{1, 2},
+	{4, 2},
+	{7, 2},
+	{10, 2},
+	{13, 2},
+	{16, 2},
+}
+
+func isMonster(grid [][]rune, x, y int) bool {
+	if x+19 >= len(grid[y]) {
+		return false
+	}
+	if y+2 >= len(grid) {
+		return false
+	}
+
+	for _, c := range dragon {
+		if '#' != grid[y+c.y][x+c.x] {
+			return false
+		}
+	}
+	return true
+}
+
+func SolveMonsters(filename string) int {
 	lines, _ := util.ReadInput(filename)
 	tiles := ParseTile(lines)
+
 	n := int(math.Sqrt(float64(len(tiles))))
-
-	logDebug("number of tiles: %v %vx%v\n", len(tiles), n, n)
-
+	connCount := FindConnections(tiles)
 	sol := make([]Tile, 0, len(tiles))
-	sol = search(tiles, sol, n)
-	return prodCorners(sol, n)
+	sol = search(tiles, sol, n, connCount)
+	return countAllDragons(sol, n)
 }
 
-const debug = true
-
-func logDebug(s string, arg ...interface{}) {
-	if debug {
-		fmt.Printf(s, arg...)
+func countAllDragons(sol []Tile, n int) int {
+	solNoBorder := make([]Tile, 0, len(sol))
+	for _, tile := range sol {
+		solNoBorder = append(solNoBorder, removeBorder(tile))
 	}
-}
+	single := stitchImage(solNoBorder, n)
 
-func checkTest() {
-	fmt.Println("check test")
-	testLines, _ := util.ReadInput("check_test.txt")
-	testTiles := ParseTile(testLines)
-	testN := 3
-	testTile := testTiles[5]
-	testTiles = testTiles[:5]
-	fmt.Printf("should pass: %v \n", checkBorder(testTiles, testTile, testN))
-}
+	countDragon := 0
+	for _, ori := range orientations(single) {
+		for j := 0; j < len(single.Grid); j++ {
+			for i := 0; i < len(single.Grid[j]); i++ {
+				if isMonster(ori.Grid, i, j) {
+					countDragon++
+				}
+			}
+		}
+		if countDragon != 0 {
+			break
+		}
+	}
 
-func test1() {
-	fmt.Println("Test 1")
-	fmt.Printf("Corners: %v\n", SolveCorners("test1.txt"))
-	fmt.Printf("Borders: %v\n", SolveBorders("test1.txt"))
+	dragonHash := countDragon * len(dragon)
+	hashCount := countHash(single)
+	return hashCount - dragonHash
 }
 
 func part1() {
@@ -349,14 +333,11 @@ func part1() {
 }
 
 func part2() {
-	fmt.Printf("Part 2: %v\n", 2)
+	fmt.Printf("Part 2: %v\n", SolveMonsters("input.txt"))
 }
 
 func main() {
 	fmt.Printf("Day %v: %v\n", dayNum, dayTitle)
-	//checkTest()
-	test1()
-
 	part1()
 	part2()
 }
