@@ -6,10 +6,10 @@ day_title = "Knot Hash"
 SUFFIX = [17, 31, 73, 47, 23]
 
 
-def read_input(filename: str) -> List[str]:
+def read_input(filename: str) -> str:
     with open(filename) as f:
         content = [x.strip('\n') for x in f.readlines()]
-    return content
+    return content[0]
 
 
 def swap(numbers: List[int], i: int, j: int):
@@ -37,7 +37,7 @@ def knot_hash(numbers: List[int], inst: List[int]) -> int:
     return numbers[0] * numbers[1]
 
 
-def asciiCode(s: List[str]) -> List[str]:
+def asciiCode(s: str) -> List[int]:
     b = []
     for i in s:
         b.append(ord(i))
@@ -48,7 +48,7 @@ def toHex(s: str) -> str:
     return "%0.2x" % s
 
 
-def dense_knot_hash(numbers: List[int], inst: List[str]) -> str:
+def dense_knot_hash(numbers: List[int], inst: str) -> str:
     a = asciiCode(inst)
     ass = a + SUFFIX
     as64 = ass * 64
@@ -58,10 +58,10 @@ def dense_knot_hash(numbers: List[int], inst: List[str]) -> str:
     dense_hash = list()
     prev = 0
     for i in range(16, len(numbers)+1, 16):
-        slice = numbers[prev:i]
-        acc = slice[0]
-        for j in range(1, len(slice)):
-            acc = acc ^ slice[j]
+        block = numbers[prev:i]
+        acc = block[0]
+        for j in range(1, len(block)):
+            acc = acc ^ block[j]
         # things to do before iterating
         dense_hash.append(acc)
         prev = i
@@ -75,7 +75,7 @@ def dense_knot_hash(numbers: List[int], inst: List[str]) -> str:
 
 def main():
     print("Day", day_num, ":", day_title)
-    inputs = read_input('input.txt')[0]
+    inputs = read_input('input.txt')
     ints = [int(x) for x in inputs.split(',')]
     numbers = list(range(256))
     print("Part 1: ", knot_hash(numbers, ints))
