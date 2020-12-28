@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 day_num = "06"
 day_title = "Memory Reallocation"
@@ -12,7 +12,7 @@ def read_input(filename: str) -> List[int]:
     return input_bank
 
 
-def redistribute(l: List[int]) -> (int, int):
+def redistribute(l: List[int]) -> Tuple[int, int]:
     visited = {}
     count = 0
 

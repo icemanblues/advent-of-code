@@ -1,8 +1,10 @@
+from typing import List
+
 day_num = "04"
 day_title = "High-Entropy Passphrases"
 
 
-def read_input(filename):
+def read_input(filename: str) -> List[str]:
     with open(filename) as f:
         content = [x.strip('\n') for x in f.readlines()]
     return content

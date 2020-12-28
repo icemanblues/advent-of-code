@@ -19,7 +19,7 @@ for i in range(128):
     d = dkh(p)
     b = toBin(d)
 
-    for x in range(128):
+    for x in range(len(b)):
         print(x)
         j = b[x]
         if(j == "1"):

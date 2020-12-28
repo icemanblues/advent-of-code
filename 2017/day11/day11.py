@@ -5,7 +5,7 @@ day_title = "Hex Ed"
 
 
 def read_input(filename: str) -> List[str]:
-    with open("input.txt") as f:
+    with open(filename) as f:
         path = [x.strip('\n') for x in f.readlines()]
         path = path[0].split(',')
     return path

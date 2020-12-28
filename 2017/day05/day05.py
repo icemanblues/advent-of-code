@@ -1,15 +1,17 @@
+from typing import List
+
 day_num = "05"
 day_title = "A Maze of Twisty Trampolines, All Alike"
 
 
-def read_input(filename):
+def read_input(filename: str) -> List[int]:
     with open(filename) as f:
         content = [int(x.strip('\n')) for x in f.readlines()]
     return content
 
 
-def jump_out(filename):
-    jumps = read_input('input.txt')
+def jump_out(filename: str) -> int:
+    jumps = read_input(filename)
     curr = 0
     step_count = 0
     while curr >= 0 and curr < len(jumps):
@@ -20,8 +22,8 @@ def jump_out(filename):
     return step_count
 
 
-def jump_strange(filename):
-    jumps = read_input('input.txt')
+def jump_strange(filename: str) -> int:
+    jumps = read_input(filename)
     curr = 0
     step_count = 0
     while curr >= 0 and curr < len(jumps):
@@ -32,7 +34,6 @@ def jump_strange(filename):
         else:
             jumps[old_curr] += 1
         step_count += 1
-
     return step_count
 
 
