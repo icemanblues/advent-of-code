@@ -21,14 +21,10 @@ def score(stream: str) -> Tuple[int, int]:
     for s in stream:
         if negateNext:
             negateNext = False
-            continue
-
-        if s == '!':
+        elif s == '!':
             negateNext = True
-            continue
-
-        if inGarbage and s == '>':
-                inGarbage = False
+        elif s == '>':
+            inGarbage = False
         elif inGarbage:
             garbageCount += 1
         elif s == '{':
