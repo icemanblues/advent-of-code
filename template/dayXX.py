@@ -16,3 +16,13 @@ def part1():
 
 def part2():
     print("Part 2")
+
+
+def main():
+    print(f"Day {day_num}: {day_title}")
+    part1()
+    part2()
+
+
+if __name__ == '__main__':
+    main()
