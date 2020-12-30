@@ -17,9 +17,8 @@ def read_input(filename: str) -> Dict[int, List[int]]:
 
 
 def bfs(start: int, end: int, pipemap: Dict[int, List[int]]) -> bool:
-    queue: List[int] = []
-    queue.extend(pipemap[start])
-    visited: Set[int] = {start}
+    queue: List[int] = [start]
+    visited: Set[int] = set()
     while len(queue) != 0:
         q = queue.pop(0)
         if q == end:
@@ -42,8 +41,34 @@ def part1():
     print("Part 1:", count)
 
 
+def visit(start: int, pipemap: Dict[int, List[int]]) -> Set[int]:
+    queue: List[int] = [start]
+    visited: Set[int] = set()
+    while len(queue) != 0:
+        q = queue.pop(0)
+        if q in visited:
+            continue
+        visited.add(q)
+        queue.extend(pipemap[q])
+
+    return visited
+
+
 def part2():
-    print("Part 2")
+    pipemap = read_input('input.txt')
+    groups: List[Set[int]] = []
+    for p in pipemap.keys():
+        s: Set[int] = set()
+        for g in groups:
+            if p in g:
+                s = g
+                break
+        if len(s) != 0:
+            continue
+        s = visit(p, pipemap)
+        groups.append(s)
+
+    print("Part 2:", len(groups))
 
 
 def main():
