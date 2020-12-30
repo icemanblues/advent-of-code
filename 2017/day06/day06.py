@@ -7,9 +7,8 @@ day_title = "Memory Reallocation"
 def read_input(filename: str) -> List[int]:
     with open(filename) as f:
         content = [x.strip('\n') for x in f.readlines()]
-        input_bank = content[0].split()
-        input_bank = [int(x) for x in input_bank]
-    return input_bank
+        int_bank: List[int] = [int(x) for x in content[0].split()]
+    return int_bank
 
 
 def redistribute(l: List[int]) -> Tuple[int, int]:

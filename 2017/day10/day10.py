@@ -44,7 +44,7 @@ def asciiCode(s: str) -> List[int]:
     return b
 
 
-def toHex(s: str) -> str:
+def toHex(s: int) -> str:
     return "%0.2x" % s
 
 
@@ -55,7 +55,7 @@ def dense_knot_hash(numbers: List[int], inst: str) -> str:
     knot_hash(numbers, as64)
 
     # XOR the 16th elements
-    dense_hash = list()
+    dense_hash: List[int] = list()
     prev = 0
     for i in range(16, len(numbers)+1, 16):
         block = numbers[prev:i]
