@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import List
 
 day_num = "17"
 day_title = "Spinlock"
@@ -14,25 +14,27 @@ def spinlock(step_size: int, num_inserts: int) -> int:
         spin.insert(idx, x)
 
     f = spin.index(num_inserts)
-    return spin[(f+1)%len(spin)]
+    return spin[(f+1) % len(spin)]
 
 
 def part1():
     print("Part 1:", spinlock(INPUT, 2017))
 
 
-class Node:
-    def __init__(self, d: int):
-        self.data = d
-        self.next = None
-
-
-def nodelock(step_size: int, num_inserts: int) -> int:
-    return 2
+def zerolock(step_size: int, num_inserts: int) -> int:
+    l = 2
+    idx = 1
+    next_to_zero = 1
+    for x in range(2, num_inserts+1):
+        idx = (idx+step_size) % l + 1
+        l += 1
+        if idx == 1:
+            next_to_zero = x
+    return next_to_zero
 
 
 def part2():
-    print("Part 2:", nodelock(INPUT, 50000000))
+    print("Part 2:", zerolock(INPUT, 50_000_000))
 
 
 def main():
