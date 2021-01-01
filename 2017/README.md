@@ -21,8 +21,9 @@ and to do it quickly.
 
 ## Redo
 
-Since this was my first AoC, I didn't think to create helper functions. In fact, some of the scripts
-where targeted to solving my puzzle inputs that it wasn't very scalable and re-usable.
+Since this was my first AoC, I didn't think to create helper functions or packages/ modules. In fact, some of the scripts
+were hyper-targeted to solving my specific puzzle inputs that the code wasn't very scalable and re-usable. In the redo,
+I am following my best practices and creating reusable functions with parameters for filenames, etc.
 
 Also, and more importantly, I had split the puzzles across multiple laptops and I didn't commit all of solutions.
 So this repo is quite bare, although I do have all 50 stars for 2017. I want to return and provide the solutions
