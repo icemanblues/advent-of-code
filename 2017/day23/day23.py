@@ -1,3 +1,4 @@
+import math
 from typing import Dict, List
 
 day_num = "23"
@@ -8,6 +9,7 @@ def read_input(filename: str) -> List[str]:
     with open(filename) as f:
         content = [x.strip('\n') for x in f.readlines()]
     return content
+
 
 # This is copied and modified from day18
 class Prog23:
@@ -55,10 +57,29 @@ def part1():
     print("Part 1:", prog.mul_count)
 
 
+def is_prime(n: int) -> bool:
+    if n == 2:
+        return True
+    if n <= 1:
+        raise ValueError("Non-zero positive integers only")
+
+    limit: int = math.ceil(math.sqrt(n))
+    for i in range(2, limit):
+        if n % i == 0:
+            return False
+    return True
+
+
 def part2():
     # Need to analyze the coprocessor instructions (input) and figure out what it is trying to do
-    # Then write it in a normal fashion, or short circuit it a lot
-    print('Part 2:', 917)
+    # It is looking for composite numbers (not primes) between register b and c, with increments of 17
+    h = 0
+    b = 65 * 100 + 100000
+    c = b + 17000
+    for x in range(b, c+1, 17):
+        if not is_prime(x):
+            h += 1
+    print('Part 2:', h)
 
 
 def main():
