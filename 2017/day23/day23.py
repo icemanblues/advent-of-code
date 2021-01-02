@@ -9,7 +9,7 @@ def read_input(filename: str) -> List[str]:
         content = [x.strip('\n') for x in f.readlines()]
     return content
 
-
+# This is copied and modified from day18
 class Prog23:
     def __init__(self, code: List[str]):
         self.registers: Dict[str, int] = {}
