@@ -32,30 +32,8 @@ In some cases, challenges were also solved using python. This was a manner of co
 
 Complete: [x]  
 Language: python  
-Editor: intellij  
+Editor: emacs  
 
-This year is fully solved on the website. However, I had split some of the code between my desktop and laptop. 
-Unfortunately, the laptop no longer works and I didn't get a chance to commit the code upstream.
+### Redo
 
-Lesson learned: Commit early and often!
-
-I started the year by using Java. 
-Around Day 10, I realized that Java was slowing me down. Too much ceremony for a single file with a single function. 
-I migrated my efforts to using Python in its place.
-
-1. python
-2. _missing_
-3. java
-4. java
-5. python
-6. python
-7. java
-8. java
-9. java
-10. python
-11. java
-12. _missing_
-13. _missing_
-14. python
-
-days 15-25 are _missing_
+This year was redone using python3, emacs, and type hinting. Read more about the [redo](2017/README.md).
