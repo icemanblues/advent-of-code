@@ -21,6 +21,14 @@ func ReadInput(filename string) ([]string, error) {
 	return lines, nil
 }
 
+func MustRead(filename string) []string {
+	l, err := ReadInput(filename)
+	if err != nil {
+		panic(err)
+	}
+	return l
+}
+
 func ReadIntput(filename string) ([]int, error) {
 	lines, err := ReadInput(filename)
 	if err != nil {
