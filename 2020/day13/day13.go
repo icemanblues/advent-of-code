@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/icemanblues/advent-of-code/2020/util"
+	"github.com/icemanblues/advent-of-code/pkg/util"
 )
 
 func part1() {

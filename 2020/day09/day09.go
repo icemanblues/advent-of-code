@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/icemanblues/advent-of-code/2020/util"
+	"github.com/icemanblues/advent-of-code/pkg/util"
 )
 
 func parse(filename string, presize int) (map[int]struct{}, []int) {
