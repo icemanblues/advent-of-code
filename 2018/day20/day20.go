@@ -35,7 +35,7 @@ func main() {
 	// part1(test3)
 	// part1(test4)
 	// part1(test5)
-	// part1(input)
+	part1(input)
 
 	part2(input)
 }
@@ -166,7 +166,7 @@ func buildGraph(regex string) (*Node, map[Point]*Node) {
 		}
 	}
 
-	fmt.Printf("stack: %d with qi %d\n", len(stack), qi)
+	//fmt.Printf("stack: %d with qi %d\n", len(stack), qi)
 	return start, nodes
 }
 
@@ -233,8 +233,8 @@ func part1(regex string) {
 	fmt.Println("Part 1")
 
 	start, nodes := buildGraph(regex)
-	fmt.Printf("graph built with %d nodes\n", len(nodes))
-	fmt.Println(start)
+	//fmt.Printf("graph built with %d nodes\n", len(nodes))
+	//fmt.Println(start)
 
 	var terminals []*Node
 	for _, n := range nodes {
@@ -266,7 +266,7 @@ func part2(regex string) {
 	count := 0
 	iter := 0
 	for _, n := range nodes {
-		fmt.Printf("iter %d pathing to %d out of %d\n", iter, n.ID, len(nodes))
+		//fmt.Printf("iter %d pathing to %d out of %d\n", iter, n.ID, len(nodes))
 
 		d := path(*start, *n)
 		if d >= 1000 {
