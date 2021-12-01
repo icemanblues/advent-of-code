@@ -6,6 +6,14 @@ I use the advent of code as an opportunity to learn new programming languages,
 practice favorites that I don't get to use at work,
 use new editors, and gain experience with new workflows.
 
+## 2021
+
+Complete: [ ]  
+Language: golang  
+Editor: emacs  
+
+In progress
+
 ## 2020
 
 Complete: [x]  
@@ -37,3 +45,17 @@ Editor: emacs
 ### Redo
 
 This year was redone using python3, emacs, and type hinting. Read more about the [redo](2017/README.md).
+
+## 2016
+
+Not yet implemented
+
+## 2015
+
+Complete: [ ]  
+Language: golang  
+Editor: emacs  
+
+
+In progress
+
