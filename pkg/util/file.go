@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func ReadInput(filename string) ([]string, error) {
@@ -61,6 +62,28 @@ func ReadRuneput(filename string) ([][]rune, error) {
 		runes = append(runes, runer)
 	}
 	return runes, nil
+}
+
+func ReadIntLine(filename string, delim string) ([]int, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var ints []int
+	scanner := bufio.NewScanner(file)
+	scanner.Scan()
+	line := scanner.Text()
+	words := strings.Split(line, delim)
+	for _, e := range words {
+		i, err := strconv.Atoi(e)
+		if err != nil {
+			return nil, err
+		}
+		ints = append(ints, i)
+	}
+	return ints, nil
 }
 
 func MustAtoi(s string) int {
