@@ -48,7 +48,7 @@ func search(n string, path map[string]int, adj map[string][]string, small map[st
 	if n == "end" {
 		return 1
 	}
-	if _, isSmall := small[n]; isSmall && path[n] >= 2 {
+	if _, isSmall := small[n]; isSmall && path[n] >= 1 {
 		return 0
 	}
 
@@ -58,10 +58,7 @@ func search(n string, path map[string]int, adj map[string][]string, small map[st
 		if child == "start" {
 			continue
 		}
-
-		path[child]++
 		sum += search(child, path, adj, small)
-		path[child]--
 	}
 	path[n]--
 
@@ -90,7 +87,6 @@ func searchTwo(n string, path map[string]int, visitedSmall string, adj map[strin
 		if child == "start" {
 			continue
 		}
-
 		sum += searchTwo(child, path, visitedSmall, adj, small)
 	}
 	path[n]--
