@@ -86,6 +86,31 @@ func ReadIntLine(filename string, delim string) ([]int, error) {
 	return ints, nil
 }
 
+func ReadIntGrid(filename string, delim string) ([][]int, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var grid [][]int
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var ints []int
+		line := scanner.Text()
+		words := strings.Split(line, delim)
+		for _, e := range words {
+			i, err := strconv.Atoi(e)
+			if err != nil {
+				return nil, err
+			}
+			ints = append(ints, i)
+		}
+		grid = append(grid, ints)
+	}
+	return grid, nil
+}
+
 func MustAtoi(s string) int {
 	n, err := strconv.Atoi(s)
 	if err != nil {
