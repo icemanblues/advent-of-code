@@ -18,7 +18,7 @@
   "homepage": "https://github.com/icemanblues/advent-of-code#readme",
   "dependencies": {
     "big-integer": "^1.6.48",
-    "package.json": "^2.0.1",
+    "package.json": "^0.0.0",
     "readline-sync": "^1.4.10"
   },
   "devDependencies": {
