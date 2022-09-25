@@ -90,34 +90,54 @@ var quantum = map[int]int64{
 	9: 1,
 }
 
+type Results struct{ one, two int64 }
+
+func (r Results) scale(a int64) Results {
+	return Results{a * r.one, a * r.two}
+}
+
+func (r Results) add(other Results) Results {
+	return Results{r.one + other.one, r.two + other.two}
+}
+
+func (r Results) max() int64 {
+	if r.one > r.two {
+		return r.one
+	}
+	return r.two
+}
+
 // this is do all of the iteration and build the cache
-func dynamic(game Game, memo map[Game]int64) int64 {
+func dynamic(game Game, memo map[Game]Results) Results {
 	if winner, ok := memo[game]; ok {
 		return winner
 	}
 
 	// check if game is complete
 	if game.s1 >= 21 {
-		memo[game] = 1
-		return 1
+		r := Results{1, 0}
+		memo[game] = r
+		return r
 	}
 	if game.s2 >= 21 {
-		memo[game] = 0
-		return 0
+		r := Results{0, 1}
+		memo[game] = r
+		return r
 	}
 
-	var sum int64 = 0
+	sum := Results{0, 0}
 	for roll, universes := range quantum {
 		if game.ptr {
 			newP1 := move(game.p1, roll)
 			newGame := Game{newP1, game.p2, game.s1 + newP1, game.s2, !game.ptr}
-			value := universes * dynamic(newGame, memo)
-			sum += value
+			value := dynamic(newGame, memo).scale(universes)
+			sum = sum.add(value)
+			//sum += value
 		} else {
 			newP2 := move(game.p2, roll)
 			newGame := Game{game.p1, newP2, game.s1, game.s2 + newP2, !game.ptr}
-			value := universes * dynamic(newGame, memo)
-			sum += value
+			value := dynamic(newGame, memo).scale(universes)
+			sum = sum.add(value)
 		}
 	}
 
@@ -128,9 +148,9 @@ func dynamic(game Game, memo map[Game]int64) int64 {
 func part2() {
 	in1, in2 := 9, 4 // input.txt
 	game := Game{in1, in2, 0, 0, true}
-	memo := make(map[Game]int64)
+	memo := make(map[Game]Results)
 	universes := dynamic(game, memo)
-	fmt.Printf("Part 2: %v\n", universes)
+	fmt.Printf("Part 2: %v\n", universes.max())
 }
 
 func main() {
