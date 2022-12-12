@@ -34,11 +34,28 @@ func parse(filename string) []Inst {
 	return insts
 }
 
+func printImage(image []rune) {
+	for i, r := range image {
+		if i%40 == 0 {
+			fmt.Println()
+		}
+		fmt.Printf("%c", r)
+	}
+	fmt.Println()
+}
+
 func main() {
 	fmt.Printf("Day %v: %v\n", dayNum, dayTitle)
 	insts := parse("input.txt")
 	idx, x, cycle, score := 0, 1, 0, 0
+	image := make([]rune, 240, 240)
 	for idx < len(insts) {
+		// part 2 to print the item
+		if c := cycle % 40; c >= x-1 && c <= x+1 {
+			image[cycle] = '#'
+		} else {
+			image[cycle] = '.'
+		}
 		cycle++
 		insts[idx].count--
 		if cycle == 20 || cycle == 60 || cycle == 100 || cycle == 140 || cycle == 180 || cycle == 220 {
@@ -51,4 +68,6 @@ func main() {
 		}
 	}
 	fmt.Printf("Part 1: %v\n", score)
+	printImage(image)
+	fmt.Printf("Part 2: %v\n", "PBZGRAZA")
 }
