@@ -101,7 +101,39 @@ func part1() {
 	fmt.Printf("Part 1: %v\n", mCount[len(mCount)-1]*mCount[len(mCount)-2])
 }
 
+func part2() {
+	monkeys := parse("input.txt")
+
+	mod := 1
+	for _, m := range monkeys {
+		mod *= m.D
+	}
+
+	mCount := make([]int, len(monkeys), len(monkeys))
+	for round := 0; round < 10000; round++ {
+		for i := range monkeys {
+			m := monkeys[i]
+			for len(m.Items) > 0 {
+				item := m.Items[0]
+				m.Items = m.Items[1:]
+
+				new := worry(m.Worry_Op, m.Worry_Value, item) % mod
+				mCount[i]++
+
+				target := monkeys[m.F]
+				if new%m.D == 0 {
+					target = monkeys[m.T]
+				}
+				target.Items = append(target.Items, new)
+			}
+		}
+	}
+	sort.Ints(mCount)
+	fmt.Printf("Part 2: %v\n", mCount[len(mCount)-1]*mCount[len(mCount)-2])
+}
+
 func main() {
 	fmt.Printf("Day %v: %v\n", dayNum, dayTitle)
 	part1()
+	part2()
 }
