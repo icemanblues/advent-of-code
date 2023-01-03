@@ -43,42 +43,6 @@ func parse(filename string) []SensorBeacon {
 	return sb
 }
 
-type Boundary struct {
-	Xmin, Xmax, Ymin, Ymax int
-	Dist                   int
-}
-
-func GetBounds(input []SensorBeacon) (map[util.Point]rune, Boundary) {
-	grid := make(map[util.Point]rune)
-	grid[input[0].Sensor] = 'S'
-	grid[input[0].Beacon] = 'B'
-	xmin, xmax := input[0].Sensor.X, input[0].Sensor.X
-	ymin, ymax := input[0].Sensor.Y, input[0].Sensor.Y
-	maxDist := input[0].dist
-	for i := 1; i < len(input); i++ {
-		item := input[i]
-		grid[item.Sensor] = 'S'
-		grid[item.Beacon] = 'B'
-
-		if item.Sensor.X < xmin {
-			xmin = item.Sensor.X
-		}
-		if item.Sensor.X > xmax {
-			xmax = item.Sensor.X
-		}
-		if item.Sensor.Y < ymin {
-			ymin = item.Sensor.Y
-		}
-		if item.Sensor.Y > ymax {
-			ymax = item.Sensor.Y
-		}
-		if item.dist > maxDist {
-			maxDist = item.dist
-		}
-	}
-	return grid, Boundary{xmin, xmax, ymin, ymax, maxDist}
-}
-
 func RangeRow(sensor util.Point, dist, row int) ([2]int, bool) {
 	delta := dist - util.Abs(sensor.Y-row)
 	if delta <= 0 {
@@ -102,7 +66,6 @@ func RangeReduce(list [][2]int) [][2]int {
 
 		seg1 := list[i]
 		seg2 := list[j]
-
 		if seg1[0] <= seg2[0] && seg1[1] >= seg2[1] {
 			// seg 1 encompasses seg2
 			list = append(list[:j], list[j+1:]...)
@@ -142,6 +105,7 @@ func Coverage(input []SensorBeacon, row int) [][2]int {
 	}
 
 	// now need to reduce this list of arrays
+	// TODO: call RangeReduce twice to handle an issue. len(list)==2 and indices are off
 	list = RangeReduce(list)
 	list = RangeReduce(list)
 	return list
@@ -168,38 +132,15 @@ func Nope(input []SensorBeacon, row int) int {
 	return count - len(grid)
 }
 
-func noBeaconCount(input []SensorBeacon, row int) int {
-	grid, b := GetBounds(input)
-	count := 0
-	for x := b.Xmin - b.Dist; x <= b.Xmax+b.Dist; x++ {
-		p := util.NewPoint(x, row)
-		if _, ok := grid[p]; ok {
-			continue
-		}
-		for _, item := range input {
-			if util.ManhattanDist(item.Sensor, p) <= item.dist {
-				count++
-				break
-			}
-		}
-	}
-	return count
-}
-
 func part1() {
-	input := parse("input.txt")
-	fmt.Printf("Part 1: %v\n", Nope(input, 2000000))
+	fmt.Printf("Part 1: %v\n", Nope(parse("input.txt"), 2000000))
 }
 
 func part2() {
 	input := parse("input.txt")
 	for row := 0; row <= 4000000; row++ {
-		//for row := 0; row <= 20; row++ {
 		ranges := Coverage(input, row)
-		if len(ranges) == 2 {
-			if ranges[0][1]+2 != ranges[1][0] {
-				continue
-			}
+		if len(ranges) == 2 && ranges[0][1]+2 == ranges[1][0] {
 			x := ranges[0][1] + 1
 			freq := 4000000*x + row
 			fmt.Printf("Part 2: %v (%v,%v)\n", freq, x, row)
