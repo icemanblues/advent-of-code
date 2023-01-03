@@ -28,14 +28,14 @@ func parse(filename string) []SensorBeacon {
 		sensorYCoord := strings.Split(left[1], "=")[1]
 		sX, _ := strconv.Atoi(sensorXCoord)
 		sY, _ := strconv.Atoi(sensorYCoord)
-		sensor := util.Point{sX, sY}
+		sensor := util.NewPoint(sX, sY)
 
 		right := strings.Split(tokens[1], ", ")
 		beaconXCoord := strings.Split(right[0], "=")[1]
 		beaconYCoord := strings.Split(right[1], "=")[1]
 		bX, _ := strconv.Atoi(beaconXCoord)
 		bY, _ := strconv.Atoi(beaconYCoord)
-		beacon := util.Point{bX, bY}
+		beacon := util.NewPoint(bX, bY)
 
 		dist := util.ManhattanDist(sensor, beacon)
 		sb = append(sb, SensorBeacon{sensor, beacon, dist})
@@ -79,11 +79,100 @@ func GetBounds(input []SensorBeacon) (map[util.Point]rune, Boundary) {
 	return grid, Boundary{xmin, xmax, ymin, ymax, maxDist}
 }
 
+func RangeRow(sensor util.Point, dist, row int) ([2]int, bool) {
+	delta := dist - util.Abs(sensor.Y-row)
+	if delta <= 0 {
+		return [2]int{0, 0}, false
+	}
+	x1, x2 := sensor.X-delta, sensor.X+delta
+	return [2]int{x1, x2}, true
+}
+
+func RangeReduce(list [][2]int) [][2]int {
+	i, j := 0, 1
+	l := len(list)
+	for true {
+		if j >= len(list) {
+			i++
+			j = i + 1
+		}
+		if i >= len(list)-1 {
+			break
+		}
+
+		seg1 := list[i]
+		seg2 := list[j]
+
+		if seg1[0] <= seg2[0] && seg1[1] >= seg2[1] {
+			// seg 1 encompasses seg2
+			list = append(list[:j], list[j+1:]...)
+		} else if seg2[0] <= seg1[0] && seg2[1] >= seg1[1] {
+			// seg 2 encompasses seg1
+			list = append(list[:i], list[i+1:]...)
+		} else if seg1[0] >= seg2[0] && seg1[0] <= seg2[1] {
+			// seg1 overlaps seg2
+			m := util.Max(seg1[1], seg2[1])
+			list = append(list[:j], list[j+1:]...)
+			list[i] = [2]int{seg2[0], m}
+		} else if seg2[0] >= seg1[0] && seg2[0] <= seg1[1] {
+			// seg2 overlaps seg1
+			m := util.Max(seg1[1], seg2[1])
+			list = append(list[:j], list[j+1:]...)
+			list[i] = [2]int{seg1[0], m}
+		} else {
+			// nothing
+			j++
+			continue
+		}
+
+		if l == len(list) { // no change
+			break
+		}
+		l = len(list)
+	}
+	return list
+}
+
+func Coverage(input []SensorBeacon, row int) [][2]int {
+	list := make([][2]int, 0, len(input))
+	for _, item := range input {
+		if r, ok := RangeRow(item.Sensor, item.dist, row); ok {
+			list = append(list, r)
+		}
+	}
+
+	// now need to reduce this list of arrays
+	list = RangeReduce(list)
+	list = RangeReduce(list)
+	return list
+}
+
+func Nope(input []SensorBeacon, row int) int {
+	ranges := Coverage(input, row)
+
+	// any sensors or beacons on this row
+	grid := make(map[util.Point]struct{})
+	for _, sb := range input {
+		if sb.Beacon.Y == row {
+			grid[sb.Beacon] = struct{}{}
+		}
+		if sb.Sensor.Y == row {
+			grid[sb.Sensor] = struct{}{}
+		}
+	}
+
+	count := 0
+	for _, seg := range ranges {
+		count += seg[1] - seg[0] + 1
+	}
+	return count - len(grid)
+}
+
 func noBeaconCount(input []SensorBeacon, row int) int {
 	grid, b := GetBounds(input)
 	count := 0
 	for x := b.Xmin - b.Dist; x <= b.Xmax+b.Dist; x++ {
-		p := util.Point{x, row}
+		p := util.NewPoint(x, row)
 		if _, ok := grid[p]; ok {
 			continue
 		}
@@ -98,14 +187,25 @@ func noBeaconCount(input []SensorBeacon, row int) int {
 }
 
 func part1() {
-	fmt.Printf("Part 1: %v\n", noBeaconCount(parse("input.txt"), 2000000))
+	input := parse("input.txt")
+	fmt.Printf("Part 1: %v\n", Nope(input, 2000000))
 }
 
 func part2() {
 	input := parse("input.txt")
-	grid, bounds := GetBounds(input)
-	fmt.Println(len(grid))
-	fmt.Println(bounds)
+	for row := 0; row <= 4000000; row++ {
+		//for row := 0; row <= 20; row++ {
+		ranges := Coverage(input, row)
+		if len(ranges) == 2 {
+			if ranges[0][1]+2 != ranges[1][0] {
+				continue
+			}
+			x := ranges[0][1] + 1
+			freq := 4000000*x + row
+			fmt.Printf("Part 2: %v (%v,%v)\n", freq, x, row)
+			break
+		}
+	}
 }
 
 func main() {

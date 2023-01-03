@@ -4,7 +4,15 @@ import "fmt"
 
 type Point struct{ X, Y int }
 
+func NewPoint(x, y int) Point {
+	return Point{X: x, Y: y}
+}
+
 type Point3D struct{ X, Y, Z int }
+
+func NewPoint3D(x, y, z int) Point3D {
+	return Point3D{X: x, Y: y, Z: z}
+}
 
 func PrintGrid(grid [][]int) {
 	for y := 0; y < len(grid); y++ {
