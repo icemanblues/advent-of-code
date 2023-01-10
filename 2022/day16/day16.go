@@ -94,16 +94,20 @@ type State struct {
 	Available []string
 	Time      int
 	Score     int
+	Path      []string
 }
 
-func Search(graph Graph, curr string, state State) State {
+var final []State
+
+func Search(graph Graph, state State) State {
+	final = append(final, state)
 	if state.Time <= 0 {
 		return state
 	}
 
 	best := state
 	for i, adj := range state.Available {
-		time := state.Time - graph.MinDist[Edge{curr, adj}] - 1
+		time := state.Time - graph.MinDist[Edge{state.Current, adj}] - 1
 		if time <= 0 {
 			continue
 		}
@@ -111,8 +115,12 @@ func Search(graph Graph, curr string, state State) State {
 		avail := make([]string, 0, len(state.Available)-1)
 		avail = append(avail, state.Available[:i]...)
 		avail = append(avail, state.Available[i+1:]...)
-		newState := State{adj, avail, time, score}
-		s := Search(graph, adj, newState)
+		path := make([]string, 0, len(state.Path)+1)
+		path = append(path, state.Path...)
+		path = append(path, adj)
+		newState := State{adj, avail, time, score, path}
+		s := Search(graph, newState)
+		final = append(final, s)
 		if best.Score < s.Score {
 			best = s
 		}
@@ -122,6 +130,22 @@ func Search(graph Graph, curr string, state State) State {
 }
 
 func part1() {
+	graph := parse("test.txt")
+
+	start := "AA"
+	allNodes := make([]string, 0, len(graph.Nodes))
+	for name, node := range graph.Nodes {
+		if node.Flow > 0 {
+			allNodes = append(allNodes, name)
+		}
+	}
+
+	startState := State{start, allNodes, 30, 0, nil}
+	state := Search(graph, startState)
+	fmt.Printf("Part 1: %v\n", state.Score)
+}
+
+func part2() {
 	graph := parse("input.txt")
 
 	start := "AA"
@@ -132,13 +156,31 @@ func part1() {
 		}
 	}
 
-	startState := State{start, allNodes, 30, 0}
-	state := Search(graph, start, startState)
-	fmt.Printf("Part 1: %v\n", state.Score)
-}
+	final = make([]State, 0)
+	startState := State{start, allNodes, 26, 0, nil}
+	Search(graph, startState)
 
-func part2() {
-	fmt.Println("Part 2")
+	best := 0
+	for i := 0; i < len(final)-1; i++ {
+	iter:
+		for j := 0; j < len(final); j++ {
+			s1, s2 := final[i], final[j]
+			set := make(map[string]struct{})
+			for _, n := range s1.Path {
+				set[n] = struct{}{}
+			}
+			for _, n := range s2.Path {
+				if _, ok := set[n]; ok {
+					continue iter
+				}
+			}
+			if s := s1.Score + s2.Score; s > best {
+				best = s
+			}
+		}
+	}
+
+	fmt.Printf("Part 2: %v\n", best)
 }
 
 func main() {
