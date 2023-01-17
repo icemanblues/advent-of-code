@@ -11,20 +11,26 @@ const (
 	dayTitle = "Pyroclastic Flow"
 )
 
+const (
+	TowerLeft      = 0
+	TowerRight     = 6
+	NextRockHeight = 4
+)
+
+var JetMove map[rune]int = map[rune]int{
+	'<': -1,
+	'>': 1,
+}
+
 type WindGen struct {
 	input []rune
 	index int
 }
 
-func (w *WindGen) Next() rune {
-	r := w.input[w.index]
+func (w *WindGen) Next() (rune, int) {
+	r, i := w.input[w.index], w.index
 	w.index = (w.index + 1) % len(w.input)
-	return r
-}
-
-var JetMove map[rune]int = map[rune]int{
-	'<': -1,
-	'>': 1,
+	return r, i
 }
 
 type RockSet map[util.Point]struct{}
@@ -36,10 +42,7 @@ type Rock struct {
 }
 
 func (r Rock) Jet(rr rune) Rock {
-	i, ok := JetMove[rr]
-	if !ok {
-		panic(fmt.Sprintf("ERROR ERROR ERROR: unknown rune %c\n", rr))
-	}
+	i := JetMove[rr]
 	points := make(RockSet)
 	for p := range r.Points {
 		points[util.NewPoint(p.X+i, p.Y)] = struct{}{}
@@ -82,10 +85,35 @@ func (r Rock) Collision(a Rock) bool {
 	return false
 }
 
+func (r Rock) Heights() [7]int {
+	var h [7]int
+	for i := 0; i < 7; i++ {
+		max := 0
+		for p := range r.Points {
+			if p.X == i && p.Y > max {
+				max = p.Y
+			}
+		}
+		h[i] = max
+	}
+
+	// now normalize it
+	max := h[0]
+	for i := 1; i < len(h); i++ {
+		if h[i] > max {
+			max = h[i]
+		}
+	}
+	for i := 0; i < len(h); i++ {
+		h[i] = h[i] - max
+	}
+	return h
+}
+
 func (r Rock) Print() {
 	for y := r.Up + 3; y >= r.Down; y-- {
 		fmt.Printf("|")
-		for x := 0; x <= 6; x++ {
+		for x := TowerLeft; x <= TowerRight; x++ {
 			if _, ok := r.Points[util.NewPoint(x, y)]; ok {
 				fmt.Printf("#")
 			} else {
@@ -106,10 +134,10 @@ type RockGen struct {
 	index        int
 }
 
-func (rg *RockGen) Next(a, b int) Rock {
-	rock := rg.constructors[rg.index%len(rg.constructors)](a, b)
-	rg.index++
-	return rock
+func (rg *RockGen) Next(a, b int) (Rock, int) {
+	rock, idx := rg.constructors[rg.index](a, b), rg.index
+	rg.index = (rg.index + 1) % len(rg.constructors)
+	return rock, idx
 }
 
 func NewRockMinus(left, bottom int) Rock {
@@ -163,27 +191,27 @@ func ParseWindGen(filename string) WindGen {
 	return WindGen{[]rune(input[0]), 0}
 }
 
+func NewTower() Rock {
+	floorPoints := make(RockSet)
+	for x := TowerLeft; x <= TowerRight; x++ {
+		floorPoints[util.NewPoint(x, 0)] = struct{}{}
+	}
+	return Rock{floorPoints, TowerLeft, TowerRight, 0, 0}
+}
+
 func part1() {
 	windGen := ParseWindGen("input.txt")
 	rockGen := NewRockGen()
+	tower := NewTower()
+	numDrop := 2022
 
-	// create the tower with the floor added
-	towerLeft, towerRight, numDrop := 0, 6, 2022
-	floorPoints := make(RockSet)
-	for x := towerLeft; x <= towerRight; x++ {
-		floorPoints[util.NewPoint(x, 0)] = struct{}{}
-	}
-	tower := Rock{floorPoints, towerLeft, towerRight, 0, 0}
-
+	// blow the wind and drop the rock until it stops falling
 	for rockDrop := 0; rockDrop < numDrop; rockDrop++ {
-		rock := rockGen.Next(2, tower.Up+4)
-		//fmt.Printf("Rock drop: %v\n", rockDrop)
-		//rock.Print()
-		//tower.Print()
-		// blow the wind and drop the rock until it stops falling
+		rock, _ := rockGen.Next(2, tower.Up+4)
 		for true {
-			windRock := rock.Jet(windGen.Next())
-			if windRock.Left >= towerLeft && windRock.Right <= towerRight && !tower.Collision(windRock) {
+			wind, _ := windGen.Next()
+			windRock := rock.Jet(wind)
+			if windRock.Left >= TowerLeft && windRock.Right <= TowerRight && !tower.Collision(windRock) {
 				rock = windRock
 			}
 
@@ -195,12 +223,73 @@ func part1() {
 			rock = dropRock
 		}
 	}
-
 	fmt.Printf("Part 1: %v\n", tower.Up)
-	//tower.Print()
+}
+
+type State struct {
+	wind, rock int
+	relH       [7]int
 }
 
 func part2() {
+	windGen := ParseWindGen("input.txt")
+	rockGen := NewRockGen()
+	tower := NewTower()
+	numDrop := 1000000000000
+
+	states := make([]State, 0)
+	statesRock := make(map[State]int)
+	statesHeight := make(map[State]int)
+	loopStart, loopEnd, loopEndHeight := 0, 0, 0
+	// blow the wind and drop the rock until it stops falling
+search:
+	for rockDrop := 0; rockDrop < numDrop; rockDrop++ {
+		rock, rockIdx := rockGen.Next(2, tower.Up+4)
+
+		for true {
+			wind, windIdx := windGen.Next()
+			windRock := rock.Jet(wind)
+			if windRock.Left >= TowerLeft && windRock.Right <= TowerRight && !tower.Collision(windRock) {
+				rock = windRock
+			}
+
+			dropRock := rock.Fall()
+			if tower.Collision(dropRock) {
+				tower.Add(rock)
+				// add state too
+				heights := tower.Heights()
+				state := State{windIdx, rockIdx, heights}
+				if n, ok := statesRock[state]; ok { // loop detected
+					loopStart = n
+					loopEnd = rockDrop
+					loopEndHeight = tower.Up
+					break search
+				} else {
+					states = append(states, state)
+					statesRock[state] = rockDrop
+					statesHeight[state] = tower.Up
+				}
+				break
+			}
+			rock = dropRock
+		}
+	}
+
+	// do some math to calculate the correct answer
+	goTo := numDrop
+	height := statesHeight[states[loopStart]]
+	goTo -= loopStart
+
+	loopLen := loopEnd - loopStart
+	cycles := goTo / loopLen
+	remainder := goTo % loopLen
+	cycleInc := loopEndHeight - statesHeight[states[loopStart]]
+	height += cycles * cycleInc
+
+	remainderIdx := loopStart + remainder
+	remainderHeight := statesHeight[states[remainderIdx]] - statesHeight[states[loopStart]]
+	height += remainderHeight - 1
+	fmt.Printf("Part 2: %v\n", height)
 }
 
 func main() {
