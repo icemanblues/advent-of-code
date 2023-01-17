@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// ReadInput returns its line in the file as a string
 func ReadInput(filename string) ([]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -30,6 +31,7 @@ func MustRead(filename string) []string {
 	return l
 }
 
+// ReadIntput returns each line in the file as an int
 func ReadIntput(filename string) ([]int, error) {
 	lines, err := ReadInput(filename)
 	if err != nil {
@@ -48,6 +50,7 @@ func ReadIntput(filename string) ([]int, error) {
 	return nums, nil
 }
 
+// ReadRuneput returns each line in the file as a slice of runes []rune
 func ReadRuneput(filename string) ([][]rune, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -86,6 +89,7 @@ func ReadIntLine(filename string, delim string) ([]int, error) {
 	return ints, nil
 }
 
+// ReadIntGrid returns a 2x2 grid of ints from the file
 func ReadIntGrid(filename string, delim string) ([][]int, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -109,6 +113,32 @@ func ReadIntGrid(filename string, delim string) ([][]int, error) {
 		grid = append(grid, ints)
 	}
 	return grid, nil
+}
+
+// Read3D returns the lines of the file as Point3D
+func Read3D(filename string, delim string) ([]Point3D, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var points []Point3D
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		words := strings.Split(line, delim)
+		ints := make([]int, 0, 3)
+		for _, e := range words {
+			i, err := strconv.Atoi(e)
+			if err != nil {
+				return nil, err
+			}
+			ints = append(ints, i)
+		}
+		points = append(points, Point3D{ints[0], ints[1], ints[2]})
+	}
+	return points, nil
 }
 
 func MustAtoi(s string) int {
