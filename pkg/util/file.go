@@ -89,7 +89,7 @@ func ReadIntLine(filename string, delim string) ([]int, error) {
 	return ints, nil
 }
 
-// ReadIntGrid returns a 2x2 grid of ints from the file
+// ReadIntGrid returns a 2D grid of ints from the file
 func ReadIntGrid(filename string, delim string) ([][]int, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -113,6 +113,27 @@ func ReadIntGrid(filename string, delim string) ([][]int, error) {
 		grid = append(grid, ints)
 	}
 	return grid, nil
+}
+
+// ReadSparseGrid returns sparse grid (set) containing the points of a specific rune
+func ReadSparseGrid(filename string, symbol rune) (map[Point]struct{}, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	sparse := make(map[Point]struct{})
+	scanner, y := bufio.NewScanner(file), 0
+	for scanner.Scan() {
+		for x, r := range []rune(scanner.Text()) {
+			if r == symbol {
+				sparse[Point{x, y}] = struct{}{}
+			}
+		}
+		y++
+	}
+	return sparse, nil
 }
 
 // Read3D returns the lines of the file as Point3D
