@@ -168,28 +168,27 @@ func Score(p util.Point, d Direction) int {
 	return 1000*(p.Y+1) + 4*(p.X+1) + d.Score()
 }
 
-type WrapFunc func(util.Point, Direction, Grid, util.Point) (util.Point, Direction)
+// WrapFunc Function on how to handle wrapping around the map. It should always return a point thats in the grid
+// prev is in the grid, curr is NOT in the grid. We moved off the map, triggering the need to wrap around
+type WrapFunc func(prev, curr util.Point, d Direction, grid Grid, bounds util.Point) (util.Point, Direction)
 
 func Traverse(grid Grid, insts []Inst, start util.Point, dir Direction, bounds util.Point, wrap WrapFunc) (util.Point, Direction) {
 	curr := start
 	for _, inst := range insts {
 		// move
 		for i := 0; i < inst.Step; i++ {
-			next := Move(curr, dir)
-			// need to check that next is valid
+			next, nd := Move(curr, dir), dir
+			// need to check that next is valid, (in grid, otherwise wrap)
 			_, ok := grid[next]
 			if !ok {
-				next, dir = wrap(next, dir, grid, bounds)
-				// TODO: if this is a wall, then need to rollback
-				// dir is lost, I didn't save it
-				//next = grid.Wrap(next, dir, bounds)
+				next, nd = wrap(curr, next, dir, grid, bounds)
 			}
 			tile := grid[next]
 			if tile == '#' { // stop moving at a wall
 				break
 			}
 
-			curr = next // all good so make the move
+			curr, dir = next, nd // all good so make the move
 		}
 		// turn
 		dir = Turn(dir, inst.Turn)
@@ -197,8 +196,7 @@ func Traverse(grid Grid, insts []Inst, start util.Point, dir Direction, bounds u
 	return curr, dir
 }
 
-// type WrapFunc func(util.Point, Direction, Grid, util.Point)
-func WrapGrid(curr util.Point, d Direction, grid Grid, bounds util.Point) (util.Point, Direction) {
+func WrapGrid(prev, curr util.Point, d Direction, grid Grid, bounds util.Point) (util.Point, Direction) {
 	_, ok := grid[curr]
 	for ; !ok; _, ok = grid[curr] {
 		curr = Move(curr, d)
@@ -226,16 +224,85 @@ func part1() {
 }
 
 // cube sides are 50 x 50
+const cubeSize = 50
+
+// WrapCube a WrapFunc specific for the cube orientation of my input
+// my input.txt cube has this shape
 //
 // .12
 // .3.
 // 45.
 // 6..
+func WrapCube(prev, curr util.Point, dir Direction, grid Grid, bounds util.Point) (util.Point, Direction) {
+	// figure out which cube curr is in
+	cube := 0
+	cx, cy := prev.X/cubeSize, prev.Y/cubeSize
+	if cx == 1 && cy == 0 {
+		cube = 1
+	} else if cy == 0 && cx == 2 {
+		cube = 2
+	} else if cy == 1 && cx == 1 {
+		cube = 3
+	} else if cy == 2 && cx == 0 {
+		cube = 4
+	} else if cy == 2 && cx == 1 {
+		cube = 5
+	} else if cy == 3 && cx == 0 {
+		cube = 6
+	} else {
+		fmt.Printf("WrapCube: Unable to determine which cube for this point: %v\n", prev)
+		return prev, dir
+	}
 
-func WrapCube(curr util.Point, d Direction, grid Grid, bounds util.Point) (util.Point, Direction) {
-	return curr, d
+	if cube == 1 && dir == U { // go to cube 6
+		d := prev.X - cubeSize
+		return util.NewPoint(0, 3*cubeSize+d), R
+	} else if cube == 1 && dir == L { // go to cube 4
+		d := prev.Y
+		return util.NewPoint(0, 3*cubeSize-1-d), R
+	} else if cube == 2 && dir == U { // go to cube 6
+		d := prev.X - 2*cubeSize
+		return util.NewPoint(d, 4*cubeSize-1), U
+	} else if cube == 2 && dir == R { // go to cube 5
+		d := prev.Y
+		return util.NewPoint(2*cubeSize-1, 3*cubeSize-1-d), L
+	} else if cube == 2 && dir == D { // go to cube 3
+		d := prev.X - 2*cubeSize
+		return util.NewPoint(2*cubeSize-1, cubeSize+d), L
+	} else if cube == 3 && dir == L { // go to cube 4
+		d := prev.Y - cubeSize
+		return util.NewPoint(d, 2*cubeSize), D
+	} else if cube == 3 && dir == R { // go to cube 2
+		d := prev.Y - cubeSize
+		return util.NewPoint(2*cubeSize+d, cubeSize-1), U
+	} else if cube == 4 && dir == U { // go to cube 3
+		d := prev.X
+		return util.NewPoint(cubeSize, cubeSize+d), R
+	} else if cube == 4 && dir == L { // go to cube 1
+		d := prev.Y - 2*cubeSize
+		return util.NewPoint(cubeSize, cubeSize-1-d), R
+	} else if cube == 5 && dir == R { // go to cube 2
+		d := prev.Y - 2*cubeSize
+		return util.NewPoint(3*cubeSize-1, cubeSize-1-d), L
+	} else if cube == 5 && dir == D { // go to cube 6
+		d := prev.X - cubeSize
+		return util.NewPoint(cubeSize-1, 3*cubeSize+d), L
+	} else if cube == 6 && dir == L { // go to cube 1
+		d := prev.Y - 3*cubeSize
+		return util.NewPoint(cubeSize+d, 0), D
+	} else if cube == 6 && dir == D { // go to cube 2
+		d := prev.X
+		return util.NewPoint(2*cubeSize+d, 0), D
+	} else if cube == 6 && dir == R { // go to cube 5
+		d := prev.Y - 3*cubeSize
+		return util.NewPoint(cubeSize+d, 3*cubeSize-1), U
+	}
+
+	fmt.Printf("WrapCube: Missing a cube wrap. This point should never be reached: %v\n", prev)
+	return prev, dir
 }
 
+// 10276 too low
 func part2() {
 	grid, insts, start, bounds := Parse("input.txt")
 	dir := R
