@@ -15,6 +15,8 @@ fi
 
 mkdir -p $1
 
+cp template/answers.yaml $1
+
 for i in {01..25}
 do
     mkdir -p $1/day${i}
