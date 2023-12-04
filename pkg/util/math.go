@@ -1,5 +1,7 @@
 package util
 
+import "math"
+
 func Min(a, b int) int {
 	if a < b {
 		return a
@@ -19,4 +21,8 @@ func Abs(a int) int {
 		return -a
 	}
 	return a
+}
+
+func IntPow(a, b int) int {
+	return int(math.Pow(float64(a), float64(b)))
 }
