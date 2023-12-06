@@ -169,3 +169,11 @@ func MustAtoi(s string) int {
 	}
 	return n
 }
+
+func SliceAtoI(ss []string) []int {
+	ints := make([]int, len(ss), len(ss))
+	for i, s := range ss {
+		ints[i] = MustAtoi(s)
+	}
+	return ints
+}
