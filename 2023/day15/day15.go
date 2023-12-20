@@ -39,11 +39,9 @@ type Lens struct {
 }
 
 func part2() {
-	// hash int -> list of labels with length
 	hashmap := make(map[int][]Lens)
 	for _, s := range parse("input.txt") {
 		if strings.HasSuffix(s, "-") {
-			// remove the label from its box
 			label := string(string(s[:len(s)-1]))
 			hash := Hash(label)
 			list := hashmap[hash]
@@ -56,7 +54,7 @@ func part2() {
 			hashmap[hash] = result
 			continue
 		}
-		// must be equals
+
 		values := strings.Split(s, "=")
 		label, value := values[0], util.MustAtoi(values[1])
 		hash := Hash(label)
