@@ -5,6 +5,10 @@ type Point2D struct {
 	Y int
 }
 
+func NewPoint2D(x, y int) Point2D {
+	return Point2D{x, y}
+}
+
 type Point3D struct {
 	*Point2D
 	Z int
