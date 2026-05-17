@@ -6,13 +6,19 @@ I use the advent of code as an opportunity to learn new programming languages,
 practice favorites that I don't get to use at work,
 use new editors, and gain experience with new workflows.
 
-## 2021
+## 2023
 
 Complete: [ ]  
 Language: golang  
 Editor: emacs  
 
 In progress
+
+## 2022
+
+Complete: [x]  
+Language: golang  
+Editor: emacs  
 
 ## 2021
 
