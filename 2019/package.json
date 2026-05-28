@@ -25,10 +25,10 @@
     "@types/big-integer": "0.0.31",
     "@types/node": "^12.12.18",
     "@types/readline-sync": "^1.4.3",
-    "eslint": "^6.7.2",
+    "eslint": "^10.4.0",
     "ts-node": "^8.5.2",
     "tslint": "^5.20.1",
     "typescript": "^3.7.2",
-    "typescript-eslint-parser": "^22.0.0"
+    "typescript-eslint-parser": "^18.0.0"
   }
 }
